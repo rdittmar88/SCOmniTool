@@ -154,7 +154,7 @@ For each distinct relay host and port:
 - DNS lookup, or a note when the relay is already an IP address
 - A TCP connection with a 5 second timeout
 
-The TCP result is **open**, **closed**, or **timed out**. The check is the connection itself. No ScreenConnect protocol is sent.
+The TCP result is **open**, **closed**, or **timed out**. The check is the connection itself. No ScreenConnect protocol is sent. A firewall may still block ScreenConnect-specific traffic when a port shows open.
 
 ## Deferred: mdbg
 

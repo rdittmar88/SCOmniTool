@@ -173,6 +173,8 @@ internal static class ReportWriter
     private static void AppendNetwork(StringBuilder builder, DiagnosticSession session)
     {
         Section(builder, "Relay network checks (" + session.NetworkResults.Count + ")");
+        builder.AppendLine("  These checks only confirm basic network connectivity.");
+        builder.AppendLine("  A firewall may still block ScreenConnect-specific traffic when a port shows open.");
         if (session.NetworkResults.Count == 0)
         {
             builder.AppendLine("  No relay addresses were found.");
