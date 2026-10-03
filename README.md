@@ -116,7 +116,7 @@ The report labels the process id as `PID`, then lists a name that includes the i
 
 ### Services and clients
 
-Items whose names start with `ScreenConnect Client`, including the thumbprint suffix. Each service includes status, image path, and relay.
+Items whose names start with `ScreenConnect Client`, including the thumbprint suffix. Each service includes status, image path, and relay. The same uninstall key seen under both `SOFTWARE` and `WOW6432Node` counts as one client.
 
 ### Relay address
 

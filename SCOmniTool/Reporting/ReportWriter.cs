@@ -162,7 +162,7 @@ internal static class ReportWriter
 
     private static void AppendFiles(StringBuilder builder, DiagnosticSession session)
     {
-        Section(builder, "Files (" + session.FileItems.Count + ")");
+        Section(builder, "File Locations (" + session.FileItems.Count + ")");
         if (session.FileItems.Count == 0)
         {
             builder.AppendLine("  None");
