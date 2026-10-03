@@ -112,7 +112,7 @@ Dump data and rerun all reports clears the installations, events, and network re
 - `ScreenConnect.WindowsClient.exe`
 - `ScreenConnect.WindowsBackstageShell.exe`
 
-The report lists the process id and name.
+The report labels the process id as `PID`, then lists a name that includes the install thumbprint when it can be read, status (`Running` or `Not responding`), the executable path, and the command used to start the process. The thumbprint is the parenthetical suffix on the `ScreenConnect Client (...)` folder, so two clients are not both labeled only `ScreenConnect.ClientService`. If the path or command cannot be read, that field is shown as unavailable and the rest of the run continues. Session 0 services often hide the path and command from a standard user.
 
 ### Services and clients
 
@@ -172,10 +172,9 @@ These items are left out of this version because they need administrator rights:
 
 - UAC re-launch
 - The Security event log
-- Process executable path and command line for Session 0 services
 - Stopping or deleting anything
 
-If a registry key, profile folder, event log, Security Center query, or hardware query cannot be read, that item is recorded and the rest of the run continues. A denied Security Center or hardware query is written into its zip file, and the rest of the package is still saved.
+If a registry key, profile folder, event log, process path, process command, Security Center query, or hardware query cannot be read, that item is recorded and the rest of the run continues. A denied Security Center or hardware query is written into its zip file, and the rest of the package is still saved.
 
 ## Building
 

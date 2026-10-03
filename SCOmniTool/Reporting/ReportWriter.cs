@@ -81,9 +81,16 @@ internal static class ReportWriter
             return;
         }
 
-        foreach (var process in session.Processes.OrderBy(item => item.Name).ThenBy(item => item.Id))
+        foreach (var process in session.Processes.OrderBy(item => item.DisplayName).ThenBy(item => item.Id))
         {
-            builder.AppendLine($"  {process.Id}  {process.Name}");
+            var path = string.IsNullOrWhiteSpace(process.ExecutablePath)
+                ? "Path unavailable"
+                : process.ExecutablePath;
+            var command = string.IsNullOrWhiteSpace(process.CommandLine)
+                ? "Command unavailable"
+                : process.CommandLine;
+            builder.AppendLine($"  PID {process.Id}  {process.DisplayName}  {process.Status}  {path}");
+            builder.AppendLine("    " + command);
         }
     }
 
