@@ -61,17 +61,20 @@ A closed or timed-out relay is a finding in the report. It still exits with code
 ## Menu
 
 ```
-1) Export all relevant diagnostic data
-2) View network checks
-3) Rerun network checks
-4) Dump data and rerun all reports
-5) Show report again
-6) Exit
+1) Working directory: {current folder}
+2) Export all relevant diagnostic data
+3) View network checks
+4) Rerun network checks
+5) Dump data and rerun all reports
+6) Show report again
+7) Exit
 ```
+
+Option 1 prints the working directory. That folder is where zip files and later reports are saved. It starts as the folder you launched the app from. Choosing option 1 also asks whether to change it. A new folder can be created if it does not exist yet.
 
 ### Export
 
-Export asks for a folder and a file name. The default file name is:
+Export saves into the working directory and asks for a file name. The default file name is:
 
 ```
 {MachineName}_{yyyyMMdd_HHmmss}_diagnostics.zip

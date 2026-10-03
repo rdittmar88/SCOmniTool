@@ -6,6 +6,7 @@ namespace SCOmniTool.Models;
 internal sealed class DiagnosticSession
 {
     public AppOptions Options { get; set; } = new AppOptions();
+    public string WorkingDirectory { get; set; } = Environment.CurrentDirectory;
     public bool IsAdministrator { get; set; }
     public DateTime ScannedAt { get; set; }
     public List<ProcessInfo> Processes { get; } = new();

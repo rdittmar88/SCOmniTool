@@ -14,12 +14,15 @@ internal static class DiagnosticExporter
 {
     public static void Export(DiagnosticSession session)
     {
-        var folder = PromptFolder();
-        if (folder == null)
+        var folder = session.WorkingDirectory;
+        if (!Directory.Exists(folder))
         {
+            Console.WriteLine("Working directory was not found: " + folder);
+            Console.WriteLine("Choose option 1 to set it again.");
             return;
         }
 
+        Console.WriteLine("Saving to " + folder);
         var stamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
         var machine = SanitizeFileName(Environment.MachineName);
         var defaultName = machine + "_" + stamp + "_diagnostics.zip";
@@ -102,49 +105,6 @@ internal static class DiagnosticExporter
         return sanitized.Length == 0 ? "computer" : sanitized;
     }
 
-    private static string? PromptFolder()
-    {
-        var defaultFolder = Environment.CurrentDirectory;
-        while (true)
-        {
-            Console.Write("Folder [" + defaultFolder + "]: ");
-            var input = ReadTrimmed();
-            var folder = string.IsNullOrEmpty(input) ? defaultFolder : input;
-
-            string fullPath;
-            try
-            {
-                fullPath = Path.GetFullPath(folder);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("That folder path is not valid. " + ex.Message);
-                continue;
-            }
-
-            if (!Directory.Exists(fullPath))
-            {
-                if (!ConsolePrompt.AskYesNo("Folder does not exist. Create it? (y/n): "))
-                {
-                    Console.WriteLine("Export cancelled.");
-                    return null;
-                }
-
-                try
-                {
-                    Directory.CreateDirectory(fullPath);
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine("Could not create the folder. " + ex.Message);
-                    continue;
-                }
-            }
-
-            return fullPath;
-        }
-    }
-
     private static string? PromptFileName(string defaultName)
     {
         while (true)
@@ -159,7 +119,7 @@ internal static class DiagnosticExporter
 
             if (name.IndexOfAny(new[] { '/', '\\' }) >= 0)
             {
-                Console.WriteLine("Enter a file name only. Use the folder prompt for the location.");
+                Console.WriteLine("Enter a file name only. The file is saved in the working directory.");
                 continue;
             }
 
