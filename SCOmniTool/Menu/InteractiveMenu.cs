@@ -16,7 +16,7 @@ internal static class InteractiveMenu
             Console.WriteLine();
             Console.WriteLine("Options");
             Console.WriteLine("=======");
-            Console.WriteLine("1) Working directory: " + session.WorkingDirectory);
+            Console.WriteLine("1) Change Working Directory: " + session.WorkingDirectory);
             Console.WriteLine("2) Export all relevant diagnostic data");
             Console.WriteLine("3) Rerun network checks");
             Console.WriteLine("4) Dump data and rerun all reports");
@@ -64,12 +64,8 @@ internal static class InteractiveMenu
     private static void ShowWorkingDirectory(DiagnosticSession session)
     {
         Console.WriteLine();
-        Console.WriteLine("Working directory: " + session.WorkingDirectory);
+        Console.WriteLine("Change Working Directory: " + session.WorkingDirectory);
         Console.WriteLine("Zip files and reports are saved here.");
-        if (!ConsolePrompt.AskYesNo("Change the working directory? (y/n): "))
-        {
-            return;
-        }
 
         while (true)
         {
@@ -120,7 +116,7 @@ internal static class InteractiveMenu
             }
 
             session.WorkingDirectory = fullPath;
-            Console.WriteLine("Working directory: " + session.WorkingDirectory);
+            Console.WriteLine("Change Working Directory: " + session.WorkingDirectory);
             return;
         }
     }

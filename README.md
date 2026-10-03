@@ -62,14 +62,14 @@ A closed or timed-out relay is a finding in the report. It still exits with code
 ## Menu
 
 ```
-1) Working directory: {current folder}
+1) Change Working Directory: {current folder}
 2) Export all relevant diagnostic data
 3) Rerun network checks
 4) Dump data and rerun all reports
 5) Exit
 ```
 
-Option 1 prints the working directory. That folder is where zip files and later reports are saved. It starts as the folder you launched the app from. Choosing option 1 also asks whether to change it. A new folder can be created if it does not exist yet.
+Option 1 prints the working directory and asks for a new folder. Press Enter to keep the current one. That folder is where zip files and later reports are saved. It starts as the folder you launched the app from. A new folder can be created if it does not exist yet.
 
 ### Export
 
