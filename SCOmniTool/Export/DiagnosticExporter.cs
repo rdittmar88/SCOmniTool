@@ -12,32 +12,77 @@ namespace SCOmniTool.Export;
 
 internal static class DiagnosticExporter
 {
-    public static void Export(DiagnosticSession session)
+    public static bool Export(DiagnosticSession session)
     {
-        var folder = session.WorkingDirectory;
+        return WriteZip(session, session.WorkingDirectory, null, promptForName: true, missingFolderHint: "Choose option 1 to set it again.");
+    }
+
+    public static bool ExportAutomatic(DiagnosticSession session, string? zipPath)
+    {
+        if (string.IsNullOrWhiteSpace(zipPath))
+        {
+            return WriteZip(session, GetExecutableDirectory(), null, promptForName: false, missingFolderHint: null);
+        }
+
+        var folder = Path.GetDirectoryName(zipPath);
+        var fileName = Path.GetFileName(zipPath);
+        if (string.IsNullOrEmpty(folder) || string.IsNullOrEmpty(fileName))
+        {
+            Console.WriteLine("That zip path is not valid.");
+            return false;
+        }
+
+        if (!Directory.Exists(folder))
+        {
+            try
+            {
+                Directory.CreateDirectory(folder);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Could not create the folder. " + ex.Message);
+                return false;
+            }
+        }
+
+        return WriteZip(session, folder, fileName, promptForName: false, missingFolderHint: null);
+    }
+
+    private static bool WriteZip(
+        DiagnosticSession session,
+        string folder,
+        string? fileNameOverride,
+        bool promptForName,
+        string? missingFolderHint)
+    {
         if (!Directory.Exists(folder))
         {
             Console.WriteLine("Working directory was not found: " + folder);
-            Console.WriteLine("Choose option 1 to set it again.");
-            return;
+            if (!string.IsNullOrEmpty(missingFolderHint))
+            {
+                Console.WriteLine(missingFolderHint);
+            }
+
+            return false;
         }
 
         Console.WriteLine("Saving to " + folder);
         var stamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
         var machine = SanitizeFileName(Environment.MachineName);
         var defaultName = machine + "_" + stamp + "_diagnostics.zip";
-        var fileName = PromptFileName(defaultName);
+        var fileName = promptForName ? PromptFileName(defaultName) : (fileNameOverride ?? defaultName);
         if (fileName == null)
         {
-            return;
+            return false;
         }
 
         var destination = Path.Combine(folder, fileName);
-        if (File.Exists(destination) &&
+        if (promptForName &&
+            File.Exists(destination) &&
             !ConsolePrompt.AskYesNo("File already exists. Replace it? (y/n): "))
         {
             Console.WriteLine("Export cancelled.");
-            return;
+            return false;
         }
 
         string? tempRoot = null;
@@ -80,16 +125,36 @@ internal static class DiagnosticExporter
             PublishZip(tempZip, destination);
             Console.WriteLine();
             Console.WriteLine("Saved " + destination);
+            return true;
         }
         catch (Exception ex)
         {
             Console.WriteLine("Export failed: " + ex.Message);
+            return false;
         }
         finally
         {
             TryDeleteDirectory(tempRoot);
             TryDeleteFile(tempZip);
         }
+    }
+
+    private static string GetExecutableDirectory()
+    {
+        var baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
+        if (!string.IsNullOrWhiteSpace(baseDirectory))
+        {
+            return Path.GetFullPath(baseDirectory);
+        }
+
+        var processPath = Process.GetCurrentProcess().MainModule?.FileName;
+        var directory = string.IsNullOrWhiteSpace(processPath) ? null : Path.GetDirectoryName(processPath);
+        if (string.IsNullOrWhiteSpace(directory))
+        {
+            return Environment.CurrentDirectory;
+        }
+
+        return Path.GetFullPath(directory);
     }
 
     internal static string SanitizeFileName(string name)

@@ -1,10 +1,12 @@
 using System;
+using System.IO;
 
 namespace SCOmniTool.Models;
 
 internal sealed class AppOptions
 {
     public bool Silent { get; private set; }
+    public string? SilentZipPath { get; private set; }
     public bool AllEvents { get; private set; }
     public int EventWindowDays { get; private set; } = Constants.DefaultEventWindowDays;
 
@@ -18,6 +20,18 @@ internal sealed class AppOptions
             if (string.Equals(arg, "/s", StringComparison.OrdinalIgnoreCase))
             {
                 options.Silent = true;
+                if (i + 1 < args.Length && !args[i + 1].StartsWith("/"))
+                {
+                    options.SilentZipPath = NormalizeZipPath(args[++i]);
+                }
+
+                continue;
+            }
+
+            if (arg.StartsWith("/s:", StringComparison.OrdinalIgnoreCase))
+            {
+                options.Silent = true;
+                options.SilentZipPath = NormalizeZipPath(arg.Substring(3));
                 continue;
             }
 
@@ -44,10 +58,42 @@ internal sealed class AppOptions
                 continue;
             }
 
-            throw new ArgumentException("Unknown argument: " + arg + ". Supported arguments: /s /days:N /all");
+            throw new ArgumentException("Unknown argument: " + arg + ". Supported arguments: /s [zip path] /days:N /all");
         }
 
         return options;
+    }
+
+    private static string NormalizeZipPath(string value)
+    {
+        value = value.Trim().Trim('"');
+        if (value.Length == 0)
+        {
+            throw new ArgumentException("Usage: /s [zip path]. Example: SCOmniTool.exe /s C:\\Reports\\machine.zip");
+        }
+
+        string fullPath;
+        try
+        {
+            fullPath = Path.GetFullPath(value);
+        }
+        catch (Exception ex)
+        {
+            throw new ArgumentException("That zip path is not valid. " + ex.Message);
+        }
+
+        if (!fullPath.EndsWith(".zip", StringComparison.OrdinalIgnoreCase))
+        {
+            fullPath += ".zip";
+        }
+
+        var fileName = Path.GetFileName(fullPath);
+        if (string.IsNullOrEmpty(fileName) || fileName.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0)
+        {
+            throw new ArgumentException("That zip file name is not valid.");
+        }
+
+        return fullPath;
     }
 
     private static int ParseDays(string value)

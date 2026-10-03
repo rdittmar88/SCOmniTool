@@ -1,4 +1,5 @@
 using System;
+using SCOmniTool.Export;
 using SCOmniTool.Menu;
 using SCOmniTool.Models;
 using SCOmniTool.Reporting;
@@ -25,11 +26,12 @@ internal static class Program
             var session = DiagnosticCollector.Collect(options);
             ReportWriter.PrintReport(session);
 
-            if (!options.Silent)
+            if (options.Silent)
             {
-                InteractiveMenu.Run(session);
+                return DiagnosticExporter.ExportAutomatic(session, options.SilentZipPath) ? 0 : 1;
             }
 
+            InteractiveMenu.Run(session);
             return 0;
         }
         catch (Exception ex)

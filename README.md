@@ -45,7 +45,8 @@ The app will:
 
 | Argument | Meaning |
 |----------|---------|
-| `/s` | Print the report and exit. The menu is skipped, and no zip is written. |
+| `/s` | Print the report, write the diagnostic zip, and exit. The menu is skipped. With no path, the zip is saved next to the executable. |
+| `/s [zip path]` | Same as `/s`, but the zip uses that file name and folder. Example: `SCOmniTool.exe /s C:\Reports\machine.zip`. A missing folder is created. `.zip` is added when the path does not already end with it. |
 | `/days:N` | Search the last N days of events. The default is 30. |
 | `/all` | Search the retained logs instead of the day window. |
 
@@ -54,7 +55,7 @@ The app will:
 | Code | Meaning |
 |------|---------|
 | `0` | The run finished |
-| `1` | The arguments were not recognized, or an unexpected error stopped the scan |
+| `1` | The arguments were not recognized, the scan failed, or `/s` could not write the zip |
 
 A closed or timed-out relay is a finding in the report. It still exits with code `0`.
 
@@ -193,6 +194,7 @@ Run on a Windows machine with ScreenConnect installed:
 2. Rerun network checks and confirm the relay DNS and port lines refresh
 3. Choose dump data and rerun all reports, and confirm the scan time and results are new
 4. Export a zip and confirm all six files are inside
-5. Run with `/s` and confirm the process exits after the report
-6. Run with `/days:1` and confirm the event window line
-7. Run as a standard user and confirm there is no UAC prompt
+5. Run with `/s` and confirm the zip is written next to the executable with no prompts
+6. Run with `/s C:\Reports\machine.zip` and confirm that file is written
+7. Run with `/days:1` and confirm the event window line
+8. Run as a standard user and confirm there is no UAC prompt
