@@ -37,7 +37,6 @@ internal static class ReportWriter
         AppendAntivirus(builder, session);
         AppendDefenderActions(builder, session);
         AppendEvents(builder, session);
-        AppendNotes(builder, session);
 
         return builder.ToString().TrimEnd();
     }
@@ -292,20 +291,6 @@ internal static class ReportWriter
     private static string Flatten(string value)
     {
         return (value ?? string.Empty).Replace("\r\n", " ").Replace("\n", " ").Replace("\r", " ");
-    }
-
-    private static void AppendNotes(StringBuilder builder, DiagnosticSession session)
-    {
-        if (session.Notes.Count == 0)
-        {
-            return;
-        }
-
-        Section(builder, "Notes (" + session.Notes.Count + ")");
-        foreach (var note in session.Notes)
-        {
-            builder.AppendLine("  " + note);
-        }
     }
 
     private static void Section(StringBuilder builder, string title)
