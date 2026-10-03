@@ -5,6 +5,7 @@ using SCOmniTool.Discovery;
 using SCOmniTool.Events;
 using SCOmniTool.Models;
 using SCOmniTool.Network;
+using SCOmniTool.Security;
 
 namespace SCOmniTool;
 
@@ -38,6 +39,20 @@ internal static class DiagnosticCollector
 
         Console.WriteLine("Reading event logs...");
         session.Events.AddRange(EventLogScanner.Scan(session));
+
+        Console.WriteLine("Reading antivirus...");
+        session.AntivirusProducts.AddRange(AntivirusScanner.FindAll(out var antivirusNote));
+        session.AntivirusNote = antivirusNote;
+
+        if (session.IsAdministrator)
+        {
+            Console.WriteLine("Reading Defender actions...");
+            session.SetDefenderResult(DefenderActionScanner.Scan(session.Options));
+        }
+        else
+        {
+            session.MarkDefenderActionsSkipped();
+        }
     }
 
     private static void AddServicesFromRegistry(DiagnosticSession session)

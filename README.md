@@ -66,10 +66,13 @@ A closed or timed-out relay is a finding in the report. It still exits with code
 2) Export all relevant diagnostic data
 3) Rerun network checks
 4) Dump data and rerun all reports
-5) Exit
+5) Check Defender actions
+6) Exit
 ```
 
 Option 1 prints the working directory and asks for a new folder. Press Enter to keep the current one. That folder is where zip files and later reports are saved. It starts as the folder you launched the app from. A new folder can be created if it does not exist yet.
+
+Check Defender actions reads recent Microsoft Defender detections and actions whose details mention ScreenConnect. The opening report includes those actions only when SCOmniTool is already running as administrator. Otherwise this menu option asks for administrator approval, prints the actions, and keeps them for the next export.
 
 ### Export
 
@@ -83,10 +86,11 @@ The zip contains:
 
 | File | Contents |
 |------|----------|
-| `discovery-report.txt` | Installations, services, keys, files, relays, event count, and the latest network results |
+| `discovery-report.txt` | Installations, services, keys, files, relays, antivirus, Defender actions, event count, and the latest network results |
 | `events_{MachineName}_{yyyyMMdd_HHmmss}.csv` | Matching event log rows |
 | `dxdiag.txt` | Full `dxdiag /t` output |
 | `security-software.txt` | Antivirus, antispyware, and firewall products from Security Center |
+| `defender-actions.txt` | Defender actions that mention ScreenConnect, or a note that they were not collected |
 | `network.txt` | Latest DNS and TCP result for every relay |
 | `system-summary.txt` | Computer name, OS, architecture, manufacturer, model, CPU, and RAM |
 
@@ -190,11 +194,12 @@ Build outputs:
 
 Run on a Windows machine with ScreenConnect installed:
 
-1. Run interactively and confirm the report lists processes, services, keys, files, relays, and an event count
+1. Run interactively and confirm the report lists processes, services, keys, files, relays, antivirus, and an event count
 2. Rerun network checks and confirm the relay DNS and port lines refresh
 3. Choose dump data and rerun all reports, and confirm the scan time and results are new
-4. Export a zip and confirm all six files are inside
+4. Export a zip and confirm all seven files are inside
 5. Run with `/s` and confirm the zip is written next to the executable with no prompts
 6. Run with `/s C:\Reports\machine.zip` and confirm that file is written
 7. Run with `/days:1` and confirm the event window line
-8. Run as a standard user and confirm there is no UAC prompt
+8. Run as a standard user and confirm the opening scan does not show a UAC prompt
+9. Choose Check Defender actions, approve the prompt, and confirm matching Defender actions print

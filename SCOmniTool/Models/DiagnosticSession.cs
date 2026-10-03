@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using SCOmniTool.Security;
 
 namespace SCOmniTool.Models;
 
@@ -18,6 +19,11 @@ internal sealed class DiagnosticSession
     public List<string> EventLogsSearched { get; } = new();
     public List<RelayCheckResult> NetworkResults { get; } = new();
     public List<string> Notes { get; } = new();
+    public List<AntivirusProduct> AntivirusProducts { get; } = new();
+    public string AntivirusNote { get; set; } = string.Empty;
+    public List<EventInfo> DefenderActions { get; } = new();
+    public bool DefenderActionsCollected { get; set; }
+    public string DefenderActionsNote { get; set; } = string.Empty;
 
     public string EventWindowDescription =>
         Options.AllEvents
@@ -28,6 +34,21 @@ internal sealed class DiagnosticSession
     {
         NetworkResults.Clear();
         NetworkResults.AddRange(results);
+    }
+
+    public void SetDefenderResult(DefenderScanResult result)
+    {
+        DefenderActions.Clear();
+        DefenderActions.AddRange(result.Actions);
+        DefenderActionsCollected = result.Collected;
+        DefenderActionsNote = result.Note ?? string.Empty;
+    }
+
+    public void MarkDefenderActionsSkipped()
+    {
+        DefenderActions.Clear();
+        DefenderActionsCollected = false;
+        DefenderActionsNote = DefenderActionScanner.SkippedNote;
     }
 
     public void Clear()
@@ -41,5 +62,10 @@ internal sealed class DiagnosticSession
         EventLogsSearched.Clear();
         NetworkResults.Clear();
         Notes.Clear();
+        AntivirusProducts.Clear();
+        AntivirusNote = string.Empty;
+        DefenderActions.Clear();
+        DefenderActionsCollected = false;
+        DefenderActionsNote = string.Empty;
     }
 }

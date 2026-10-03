@@ -110,7 +110,11 @@ internal static class DiagnosticExporter
             Console.WriteLine("Reading security software...");
             File.WriteAllText(
                 Path.Combine(tempRoot, "security-software.txt"),
-                BuildSecuritySoftwareReport(),
+                BuildSecuritySoftwareReport(session),
+                Encoding.UTF8);
+            File.WriteAllText(
+                Path.Combine(tempRoot, "defender-actions.txt"),
+                ReportWriter.BuildDefenderActions(session) + Environment.NewLine,
                 Encoding.UTF8);
 
             Console.WriteLine("Reading system summary...");
@@ -308,14 +312,36 @@ internal static class DiagnosticExporter
         }
     }
 
-    private static string BuildSecuritySoftwareReport()
+    private static string BuildSecuritySoftwareReport(DiagnosticSession session)
     {
         var builder = new StringBuilder();
         builder.AppendLine("Security software");
         builder.AppendLine("Machine: " + Environment.MachineName);
         builder.AppendLine("Collected: " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
         builder.AppendLine();
-        AppendSecurityProducts(builder, "AntiVirusProduct", "Antivirus");
+        builder.AppendLine("Antivirus");
+        builder.AppendLine("---------");
+        if (!string.IsNullOrWhiteSpace(session.AntivirusNote))
+        {
+            builder.AppendLine(session.AntivirusNote);
+            builder.AppendLine();
+        }
+        else if (session.AntivirusProducts.Count == 0)
+        {
+            builder.AppendLine("No products reported.");
+            builder.AppendLine();
+        }
+        else
+        {
+            foreach (var product in session.AntivirusProducts)
+            {
+                builder.AppendLine("Name: " + product.Name);
+                builder.AppendLine("Path: " + product.Path);
+                builder.AppendLine("Product state: " + product.ProductState);
+                builder.AppendLine();
+            }
+        }
+
         AppendSecurityProducts(builder, "AntiSpywareProduct", "Antispyware");
         AppendSecurityProducts(builder, "FirewallProduct", "Firewall");
         return builder.ToString();

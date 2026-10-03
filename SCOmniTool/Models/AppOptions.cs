@@ -7,6 +7,8 @@ internal sealed class AppOptions
 {
     public bool Silent { get; private set; }
     public string? SilentZipPath { get; private set; }
+    public bool DefenderActionsOnly { get; private set; }
+    public string? DefenderActionsOutputPath { get; private set; }
     public bool AllEvents { get; private set; }
     public int EventWindowDays { get; private set; } = Constants.DefaultEventWindowDays;
 
@@ -32,6 +34,18 @@ internal sealed class AppOptions
             {
                 options.Silent = true;
                 options.SilentZipPath = NormalizeZipPath(arg.Substring(3));
+                continue;
+            }
+
+            if (string.Equals(arg, "/defender-actions", StringComparison.OrdinalIgnoreCase))
+            {
+                options.DefenderActionsOnly = true;
+                continue;
+            }
+
+            if (arg.StartsWith("/defender-out:", StringComparison.OrdinalIgnoreCase))
+            {
+                options.DefenderActionsOutputPath = arg.Substring("/defender-out:".Length).Trim().Trim('"');
                 continue;
             }
 

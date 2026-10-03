@@ -4,6 +4,7 @@ using SCOmniTool.Export;
 using SCOmniTool.Models;
 using SCOmniTool.Network;
 using SCOmniTool.Reporting;
+using SCOmniTool.Security;
 
 namespace SCOmniTool.Menu;
 
@@ -20,7 +21,8 @@ internal static class InteractiveMenu
             Console.WriteLine("2) Export all relevant diagnostic data");
             Console.WriteLine("3) Rerun network checks");
             Console.WriteLine("4) Dump data and rerun all reports");
-            Console.WriteLine("5) Exit");
+            Console.WriteLine("5) Check Defender actions");
+            Console.WriteLine("6) Exit");
             Console.Write("Select an option: ");
 
             var choice = Console.ReadLine()?.Trim();
@@ -48,9 +50,12 @@ internal static class InteractiveMenu
                         ReportWriter.PrintReport(session);
                         break;
                     case "5":
+                        DefenderActionCheck.Run(session);
+                        break;
+                    case "6":
                         return;
                     default:
-                        Console.WriteLine("Enter a number from 1 to 5.");
+                        Console.WriteLine("Enter a number from 1 to 6.");
                         break;
                 }
             }

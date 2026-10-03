@@ -34,6 +34,8 @@ internal static class ReportWriter
         AppendRegistry(builder, session);
         AppendFiles(builder, session);
         AppendNetwork(builder, session);
+        AppendAntivirus(builder, session);
+        AppendDefenderActions(builder, session);
         AppendEvents(builder, session);
         AppendNotes(builder, session);
 
@@ -206,6 +208,70 @@ internal static class ReportWriter
         }
     }
 
+    public static void PrintDefenderActions(DiagnosticSession session)
+    {
+        var builder = new StringBuilder();
+        AppendDefenderActions(builder, session);
+        Console.WriteLine();
+        Console.WriteLine(builder.ToString().TrimEnd());
+    }
+
+    public static string BuildDefenderActions(DiagnosticSession session)
+    {
+        var builder = new StringBuilder();
+        AppendDefenderActions(builder, session);
+        return builder.ToString().TrimEnd();
+    }
+
+    private static void AppendAntivirus(StringBuilder builder, DiagnosticSession session)
+    {
+        Section(builder, "Antivirus (" + session.AntivirusProducts.Count + ")");
+        if (!string.IsNullOrWhiteSpace(session.AntivirusNote))
+        {
+            builder.AppendLine("  " + session.AntivirusNote);
+        }
+
+        if (session.AntivirusProducts.Count == 0 && string.IsNullOrWhiteSpace(session.AntivirusNote))
+        {
+            builder.AppendLine("  None");
+        }
+
+        foreach (var product in session.AntivirusProducts)
+        {
+            builder.AppendLine("  " + product.Name);
+            builder.AppendLine("    Path: " + product.Path);
+            builder.AppendLine("    Product state: " + product.ProductState);
+        }
+    }
+
+    private static void AppendDefenderActions(StringBuilder builder, DiagnosticSession session)
+    {
+        var title = session.DefenderActionsCollected
+            ? "Defender actions (" + session.DefenderActions.Count + ")"
+            : "Defender actions";
+        Section(builder, title);
+        builder.AppendLine("  Window: " + session.EventWindowDescription);
+        if (!session.DefenderActionsCollected)
+        {
+            builder.AppendLine("  " + (string.IsNullOrWhiteSpace(session.DefenderActionsNote)
+                ? "Defender actions were not collected."
+                : session.DefenderActionsNote));
+            return;
+        }
+
+        if (session.DefenderActions.Count == 0)
+        {
+            builder.AppendLine("  None");
+            return;
+        }
+
+        foreach (var action in session.DefenderActions)
+        {
+            builder.AppendLine("  " + FormatTime(action.TimeCreated) + "  " + action.EventId);
+            builder.AppendLine("    " + Flatten(action.Message));
+        }
+    }
+
     private static void AppendEvents(StringBuilder builder, DiagnosticSession session)
     {
         Section(builder, "Events (" + session.Events.Count + ")");
@@ -214,6 +280,11 @@ internal static class ReportWriter
             ? "none"
             : string.Join(", ", session.EventLogsSearched)));
         builder.AppendLine("  Full event rows are written into the diagnostic zip.");
+    }
+
+    private static string Flatten(string value)
+    {
+        return (value ?? string.Empty).Replace("\r\n", " ").Replace("\n", " ").Replace("\r", " ");
     }
 
     private static void AppendNotes(StringBuilder builder, DiagnosticSession session)
