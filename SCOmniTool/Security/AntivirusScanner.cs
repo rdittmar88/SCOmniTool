@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Management;
 using SCOmniTool.Models;
 
@@ -11,7 +10,7 @@ internal static class AntivirusScanner
     public static List<AntivirusProduct> FindAll(out string note)
     {
         note = string.Empty;
-        var products = new List<AntivirusProduct>();
+        var readings = new List<SecurityProductReading>();
 
         try
         {
@@ -23,18 +22,34 @@ internal static class AntivirusScanner
             {
                 using (product)
                 {
-                    products.Add(new AntivirusProduct
-                    {
-                        Name = Property(product, "displayName"),
-                        Path = Property(product, "pathToSignedProductExe"),
-                        ProductState = FormatProductState(product["productState"])
-                    });
+                    readings.Add(ProductStateText.Read(
+                        Property(product, "displayName"),
+                        Property(product, "pathToSignedProductExe"),
+                        product["productState"]));
                 }
             }
         }
         catch (Exception ex)
         {
             note = "Could not read AntiVirusProduct: " + ex.Message;
+            return new List<AntivirusProduct>();
+        }
+
+        return ToProducts(readings);
+    }
+
+    private static List<AntivirusProduct> ToProducts(IReadOnlyList<SecurityProductReading> readings)
+    {
+        var descriptions = ProductStateText.Describe(readings);
+        var products = new List<AntivirusProduct>(readings.Count);
+        for (var i = 0; i < readings.Count; i++)
+        {
+            products.Add(new AntivirusProduct
+            {
+                Name = readings[i].Name,
+                Path = readings[i].Path,
+                ProductState = descriptions[i]
+            });
         }
 
         return products;
@@ -55,24 +70,6 @@ internal static class AntivirusScanner
         catch
         {
             return "not available";
-        }
-    }
-
-    private static string FormatProductState(object? value)
-    {
-        if (value == null)
-        {
-            return "not available";
-        }
-
-        try
-        {
-            var number = Convert.ToUInt32(value, CultureInfo.InvariantCulture);
-            return number + " (0x" + number.ToString("X", CultureInfo.InvariantCulture) + ")";
-        }
-        catch
-        {
-            return value.ToString() ?? "not available";
         }
     }
 }

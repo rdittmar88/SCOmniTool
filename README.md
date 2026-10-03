@@ -145,6 +145,10 @@ The relay is read from the service `ImagePath`:
 | System temp folders | `C:\Windows\SystemTemp\ScreenConnect\` |
 | Download files | `C:\Users\{User}\Downloads\` files containing `ScreenConnect` in the filename |
 
+### Antivirus
+
+Security Center reports each installed antivirus product. The product state is printed as enabled, disabled, snoozed, or expired, and whether definitions are up to date. When Windows Defender is not the active product and another antivirus is enabled, the report says Defender is deferred to that product. The original Security Center number stays in parentheses.
+
 ### Events
 
 The Application and System logs are searched, plus any log whose name contains `ScreenConnect`.

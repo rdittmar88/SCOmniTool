@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
@@ -7,6 +8,7 @@ using System.Management;
 using System.Text;
 using SCOmniTool.Models;
 using SCOmniTool.Reporting;
+using SCOmniTool.Security;
 
 namespace SCOmniTool.Export;
 
@@ -358,23 +360,33 @@ internal static class DiagnosticExporter
                 @"root\SecurityCenter2",
                 "SELECT displayName, pathToSignedProductExe, productState FROM " + className);
             using var results = searcher.Get();
-            var count = 0;
+            var readings = new List<SecurityProductReading>();
             foreach (ManagementObject product in results)
             {
                 using (product)
                 {
-                    count++;
-                    builder.AppendLine("Name: " + Property(product, "displayName"));
-                    builder.AppendLine("Path: " + Property(product, "pathToSignedProductExe"));
-                    builder.AppendLine("Product state: " + FormatProductState(product["productState"]));
-                    builder.AppendLine();
+                    readings.Add(ProductStateText.Read(
+                        Property(product, "displayName"),
+                        Property(product, "pathToSignedProductExe"),
+                        product["productState"]));
                 }
             }
 
-            if (count == 0)
+            if (readings.Count == 0)
             {
                 builder.AppendLine("No products reported.");
                 builder.AppendLine();
+            }
+            else
+            {
+                var descriptions = ProductStateText.Describe(readings);
+                for (var i = 0; i < readings.Count; i++)
+                {
+                    builder.AppendLine("Name: " + readings[i].Name);
+                    builder.AppendLine("Path: " + readings[i].Path);
+                    builder.AppendLine("Product state: " + descriptions[i]);
+                    builder.AppendLine();
+                }
             }
         }
         catch (Exception ex)
@@ -487,24 +499,6 @@ internal static class DiagnosticExporter
         catch
         {
             return "not available";
-        }
-    }
-
-    private static string FormatProductState(object? value)
-    {
-        if (value == null)
-        {
-            return "not available";
-        }
-
-        try
-        {
-            var number = Convert.ToUInt32(value, CultureInfo.InvariantCulture);
-            return number + " (0x" + number.ToString("X", CultureInfo.InvariantCulture) + ")";
-        }
-        catch
-        {
-            return value.ToString() ?? "not available";
         }
     }
 
