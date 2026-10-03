@@ -63,11 +63,9 @@ A closed or timed-out relay is a finding in the report. It still exits with code
 ```
 1) Working directory: {current folder}
 2) Export all relevant diagnostic data
-3) View network checks
-4) Rerun network checks
-5) Dump data and rerun all reports
-6) Show report again
-7) Exit
+3) Rerun network checks
+4) Dump data and rerun all reports
+5) Exit
 ```
 
 Option 1 prints the working directory. That folder is where zip files and later reports are saved. It starts as the folder you launched the app from. Choosing option 1 also asks whether to change it. A new folder can be created if it does not exist yet.
@@ -95,7 +93,7 @@ The zip contains:
 
 ### Network checks
 
-View prints the latest DNS and TCP result for each relay. Rerun repeats those checks and replaces the stored results. A later export uses the newest results.
+Rerun repeats the DNS and TCP checks for each relay, prints the new results, and replaces the stored results. A later export uses those results.
 
 ### Rerun all reports
 
@@ -192,10 +190,9 @@ Build outputs:
 Run on a Windows machine with ScreenConnect installed:
 
 1. Run interactively and confirm the report lists processes, services, keys, files, relays, and an event count
-2. Choose view network checks and confirm the relay DNS and port lines
-3. Rerun network checks and confirm the results refresh
-4. Choose dump data and rerun all reports, and confirm the scan time and results are new
-5. Export a zip and confirm all six files are inside
-6. Run with `/s` and confirm the process exits after the report
-7. Run with `/days:1` and confirm the event window line
-8. Run as a standard user and confirm there is no UAC prompt
+2. Rerun network checks and confirm the relay DNS and port lines refresh
+3. Choose dump data and rerun all reports, and confirm the scan time and results are new
+4. Export a zip and confirm all six files are inside
+5. Run with `/s` and confirm the process exits after the report
+6. Run with `/days:1` and confirm the event window line
+7. Run as a standard user and confirm there is no UAC prompt

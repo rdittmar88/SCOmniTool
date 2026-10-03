@@ -18,11 +18,9 @@ internal static class InteractiveMenu
             Console.WriteLine("=======");
             Console.WriteLine("1) Working directory: " + session.WorkingDirectory);
             Console.WriteLine("2) Export all relevant diagnostic data");
-            Console.WriteLine("3) View network checks");
-            Console.WriteLine("4) Rerun network checks");
-            Console.WriteLine("5) Dump data and rerun all reports");
-            Console.WriteLine("6) Show report again");
-            Console.WriteLine("7) Exit");
+            Console.WriteLine("3) Rerun network checks");
+            Console.WriteLine("4) Dump data and rerun all reports");
+            Console.WriteLine("5) Exit");
             Console.Write("Select an option: ");
 
             var choice = Console.ReadLine()?.Trim();
@@ -37,28 +35,22 @@ internal static class InteractiveMenu
                         DiagnosticExporter.Export(session);
                         break;
                     case "3":
-                        ReportWriter.PrintNetwork(session);
-                        break;
-                    case "4":
                         Console.WriteLine();
                         Console.WriteLine("Checking relay addresses...");
                         session.SetNetworkResults(RelayProbe.Check(session.Services));
                         ReportWriter.PrintNetwork(session);
                         break;
-                    case "5":
+                    case "4":
                         Console.WriteLine();
                         Console.WriteLine("Clearing saved results and running the report again...");
                         session.Clear();
                         DiagnosticCollector.Fill(session);
                         ReportWriter.PrintReport(session);
                         break;
-                    case "6":
-                        ReportWriter.PrintReport(session);
-                        break;
-                    case "7":
+                    case "5":
                         return;
                     default:
-                        Console.WriteLine("Enter a number from 1 to 7.");
+                        Console.WriteLine("Enter a number from 1 to 5.");
                         break;
                 }
             }
