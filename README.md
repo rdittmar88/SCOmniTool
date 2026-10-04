@@ -38,7 +38,7 @@ The app will:
 2. Read each service `ImagePath` and take the relay host (`h=`) and port (`p=`)
 3. Resolve each relay and try a TCP connection
 4. Read matching Application, System, and ScreenConnect event logs
-5. Print the report, then the configuration report
+5. Print the report
 6. Show a menu until you exit
 
 ### Arguments
@@ -73,7 +73,7 @@ A closed or timed-out relay is a finding in the report. It still exits with code
 
 Option 1 prints the working directory and asks for a new folder. Press Enter to keep the current one. That folder is where zip files and later reports are saved. It starts as the folder you launched the app from. A new folder can be created if it does not exist yet.
 
-Rerun configuration report reads `app.config`, `system.config`, and `user.config` again, replaces the stored configuration report, and prints the new one. Processes, services, events, and network results stay as they are. A later export uses the new configuration report.
+Rerun configuration report reads `app.config`, `system.config`, and `user.config` again, replaces the stored configuration section, and prints that section. Processes, services, events, and network results stay as they are. A later export uses the new values.
 
 Check Defender actions reads recent Microsoft Defender detections and actions whose details mention ScreenConnect. The opening report includes those actions only when SCOmniTool is already running as administrator. Otherwise this menu option asks for administrator approval, prints the actions, and keeps them for the next export.
 
@@ -89,13 +89,12 @@ The zip contains:
 
 | File | Contents |
 |------|----------|
-| `discovery-report.txt` | Installations, services, keys, files, relays, antivirus, Defender actions, event count, and the latest network results |
+| `discovery-report.txt` | Installations, services, keys, files, configuration, relays, antivirus, Defender actions, event count, and the latest network results |
 | `events_{MachineName}_{yyyyMMdd_HHmmss}.csv` | Matching event log rows |
 | `dxdiag.txt` | Full `dxdiag /t` output |
 | `security-software.txt` | Antivirus, antispyware, and firewall products from Security Center |
 | `defender-actions.txt` | Defender actions that mention ScreenConnect, or a note that they were not collected |
 | `network.txt` | Latest DNS and TCP result for every relay |
-| `configuration-report.txt` | Values from `app.config`, `system.config`, and `user.config` |
 | `system-summary.txt` | Computer name, OS, architecture, manufacturer, model, CPU, and RAM |
 
 `dxdiag` runs when you export. It can take about a minute.
@@ -106,7 +105,7 @@ Rerun repeats the DNS and TCP checks for each relay, prints the new results, and
 
 ### Rerun all reports
 
-Dump data and rerun all reports clears the installations, events, network results, and configuration report already collected, then scans the machine again. The new discovery report and configuration report replace the previous ones. A later export uses that new scan.
+Dump data and rerun all reports clears the installations, events, network results, and configuration values already collected, then scans the machine again. The new report replaces the previous one. A later export uses that new scan.
 
 ## What is collected
 
@@ -151,7 +150,7 @@ The relay is read from the service `ImagePath`:
 
 ### Configuration
 
-The configuration report is printed after the discovery report and saved in the zip as `configuration-report.txt`. Each file is read from the client directory itself. A missing file is listed as not found.
+The Configuration section of the diagnostic report reads each file from the client directory itself. A missing file is listed as not found. The same section is included in `discovery-report.txt`.
 
 | Directory | Files |
 |-----------|-------|

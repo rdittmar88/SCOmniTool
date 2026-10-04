@@ -56,7 +56,6 @@ internal static class InteractiveMenu
                         session.Clear();
                         DiagnosticCollector.Fill(session);
                         ReportWriter.PrintReport(session);
-                        ReportWriter.PrintConfiguration(session);
                         break;
                     case "6":
                         DefenderActionCheck.Run(session);

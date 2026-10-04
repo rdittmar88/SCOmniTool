@@ -39,6 +39,7 @@ internal static class ReportWriter
         AppendClients(builder, session);
         AppendRegistry(builder, session);
         AppendFiles(builder, session);
+        AppendConfiguration(builder, session);
         AppendNetwork(builder, session);
         AppendAntivirus(builder, session);
         AppendDefenderActions(builder, session);
@@ -57,18 +58,17 @@ internal static class ReportWriter
     public static string BuildConfiguration(DiagnosticSession session)
     {
         var builder = new StringBuilder();
-        builder.AppendLine("ScreenConnect Configuration Report");
-        builder.AppendLine("Machine: " + Environment.MachineName);
-        var scanned = session.ConfigurationScannedAt == default
-            ? session.ScannedAt
-            : session.ConfigurationScannedAt;
-        builder.AppendLine("Scanned: " + scanned.ToString("yyyy-MM-dd HH:mm:ss"));
-        builder.AppendLine();
+        AppendConfiguration(builder, session);
+        return builder.ToString().TrimEnd();
+    }
 
+    private static void AppendConfiguration(StringBuilder builder, DiagnosticSession session)
+    {
+        Section(builder, "Configuration (" + session.ConfigurationFiles.Count + ")");
         if (session.ConfigurationFiles.Count == 0)
         {
-            builder.AppendLine("No ScreenConnect configuration directories were found.");
-            return builder.ToString().TrimEnd();
+            builder.AppendLine("  None");
+            return;
         }
 
         string? current = null;
@@ -82,21 +82,21 @@ internal static class ReportWriter
                     builder.AppendLine();
                 }
 
-                builder.AppendLine(header);
+                builder.AppendLine("  " + header);
                 current = header;
             }
 
-            builder.AppendLine("  " + file.FileName);
-            builder.AppendLine("    Path: " + file.FullPath);
+            builder.AppendLine("    " + file.FileName);
+            builder.AppendLine("      Path: " + file.FullPath);
             if (!string.IsNullOrWhiteSpace(file.Error))
             {
-                builder.AppendLine("    Could not read: " + file.Error);
+                builder.AppendLine("      Could not read: " + file.Error);
                 continue;
             }
 
             if (!file.Found)
             {
-                builder.AppendLine("    not found");
+                builder.AppendLine("      not found");
                 continue;
             }
 
@@ -108,31 +108,29 @@ internal static class ReportWriter
 
             if (file.Settings.Count == 0)
             {
-                builder.AppendLine("    (no values)");
+                builder.AppendLine("      (no values)");
                 continue;
             }
 
             foreach (var setting in file.Settings)
             {
-                builder.AppendLine("    " + setting.Name + " = " + Flatten(setting.Value));
+                builder.AppendLine("      " + setting.Name + " = " + Flatten(setting.Value));
             }
         }
-
-        return builder.ToString().TrimEnd();
     }
 
     private static void AppendRawText(StringBuilder builder, string text)
     {
         if (string.IsNullOrEmpty(text))
         {
-            builder.AppendLine("    (empty)");
+            builder.AppendLine("      (empty)");
             return;
         }
 
         var lines = text.Replace("\r\n", "\n").Replace('\r', '\n').Split('\n');
         foreach (var line in lines)
         {
-            builder.AppendLine("    " + line);
+            builder.AppendLine("      " + line);
         }
     }
 

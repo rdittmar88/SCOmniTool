@@ -105,10 +105,6 @@ internal static class DiagnosticExporter
                 Path.Combine(tempRoot, "network.txt"),
                 ReportWriter.BuildNetwork(session) + Environment.NewLine,
                 Encoding.UTF8);
-            File.WriteAllText(
-                Path.Combine(tempRoot, "configuration-report.txt"),
-                ReportWriter.BuildConfiguration(session) + Environment.NewLine,
-                Encoding.UTF8);
 
             Console.WriteLine("Running dxdiag. This can take up to a minute...");
             WriteDxDiag(Path.Combine(tempRoot, "dxdiag.txt"));
