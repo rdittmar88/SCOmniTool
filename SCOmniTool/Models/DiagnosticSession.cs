@@ -15,6 +15,8 @@ internal sealed class DiagnosticSession
     public List<ClientInfo> Clients { get; } = new();
     public List<RegistryKeyInfo> RegistryKeys { get; } = new();
     public List<FileItemInfo> FileItems { get; } = new();
+    public List<ConfigFileRecord> ConfigurationFiles { get; } = new();
+    public DateTime ConfigurationScannedAt { get; set; }
     public List<EventInfo> Events { get; } = new();
     public List<string> EventLogsSearched { get; } = new();
     public List<RelayCheckResult> NetworkResults { get; } = new();
@@ -29,6 +31,13 @@ internal sealed class DiagnosticSession
         Options.AllEvents
             ? "all retained events"
             : "last " + Options.EventWindowDays + " days";
+
+    public void SetConfiguration(IEnumerable<ConfigFileRecord> files)
+    {
+        ConfigurationFiles.Clear();
+        ConfigurationFiles.AddRange(files);
+        ConfigurationScannedAt = DateTime.Now;
+    }
 
     public void SetNetworkResults(IEnumerable<RelayCheckResult> results)
     {
@@ -58,6 +67,8 @@ internal sealed class DiagnosticSession
         Clients.Clear();
         RegistryKeys.Clear();
         FileItems.Clear();
+        ConfigurationFiles.Clear();
+        ConfigurationScannedAt = default;
         Events.Clear();
         EventLogsSearched.Clear();
         NetworkResults.Clear();

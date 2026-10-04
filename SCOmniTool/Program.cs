@@ -31,6 +31,7 @@ internal static class Program
         {
             var session = DiagnosticCollector.Collect(options);
             ReportWriter.PrintReport(session);
+            ReportWriter.PrintConfiguration(session);
 
             if (options.Silent)
             {

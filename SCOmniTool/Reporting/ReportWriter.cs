@@ -20,6 +20,12 @@ internal static class ReportWriter
         Console.WriteLine(BuildNetwork(session));
     }
 
+    public static void PrintConfiguration(DiagnosticSession session)
+    {
+        Console.WriteLine();
+        Console.WriteLine(BuildConfiguration(session));
+    }
+
     public static string BuildReport(DiagnosticSession session)
     {
         var builder = new StringBuilder();
@@ -46,6 +52,88 @@ internal static class ReportWriter
         var builder = new StringBuilder();
         AppendNetwork(builder, session);
         return builder.ToString().TrimEnd();
+    }
+
+    public static string BuildConfiguration(DiagnosticSession session)
+    {
+        var builder = new StringBuilder();
+        builder.AppendLine("ScreenConnect Configuration Report");
+        builder.AppendLine("Machine: " + Environment.MachineName);
+        var scanned = session.ConfigurationScannedAt == default
+            ? session.ScannedAt
+            : session.ConfigurationScannedAt;
+        builder.AppendLine("Scanned: " + scanned.ToString("yyyy-MM-dd HH:mm:ss"));
+        builder.AppendLine();
+
+        if (session.ConfigurationFiles.Count == 0)
+        {
+            builder.AppendLine("No ScreenConnect configuration directories were found.");
+            return builder.ToString().TrimEnd();
+        }
+
+        string? current = null;
+        foreach (var file in session.ConfigurationFiles)
+        {
+            var header = file.LocationLabel + ": " + file.DirectoryPath;
+            if (!string.Equals(current, header, StringComparison.OrdinalIgnoreCase))
+            {
+                if (current != null)
+                {
+                    builder.AppendLine();
+                }
+
+                builder.AppendLine(header);
+                current = header;
+            }
+
+            builder.AppendLine("  " + file.FileName);
+            builder.AppendLine("    Path: " + file.FullPath);
+            if (!string.IsNullOrWhiteSpace(file.Error))
+            {
+                builder.AppendLine("    Could not read: " + file.Error);
+                continue;
+            }
+
+            if (!file.Found)
+            {
+                builder.AppendLine("    not found");
+                continue;
+            }
+
+            if (!file.ParsedAsXml)
+            {
+                AppendRawText(builder, file.RawText);
+                continue;
+            }
+
+            if (file.Settings.Count == 0)
+            {
+                builder.AppendLine("    (no values)");
+                continue;
+            }
+
+            foreach (var setting in file.Settings)
+            {
+                builder.AppendLine("    " + setting.Name + " = " + Flatten(setting.Value));
+            }
+        }
+
+        return builder.ToString().TrimEnd();
+    }
+
+    private static void AppendRawText(StringBuilder builder, string text)
+    {
+        if (string.IsNullOrEmpty(text))
+        {
+            builder.AppendLine("    (empty)");
+            return;
+        }
+
+        var lines = text.Replace("\r\n", "\n").Replace('\r', '\n').Split('\n');
+        foreach (var line in lines)
+        {
+            builder.AppendLine("    " + line);
+        }
     }
 
     public static void WriteEventsCsv(IReadOnlyList<EventInfo> events, string path)

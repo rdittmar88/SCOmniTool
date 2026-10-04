@@ -164,6 +164,11 @@ internal static class FileDiscovery
         return results;
     }
 
+    public static IReadOnlyList<string> ListUserDirectories(ICollection<string> notes)
+    {
+        return GetUserDirectories(notes);
+    }
+
     private static IReadOnlyList<string> GetUserDirectories(ICollection<string> notes)
     {
         if (!Directory.Exists(UsersRoot))

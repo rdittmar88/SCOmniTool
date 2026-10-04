@@ -34,6 +34,9 @@ internal static class DiagnosticCollector
         session.Clients.AddRange(ClientDiscovery.FromUninstallKeys(session.RegistryKeys, session.Notes));
         session.FileItems.AddRange(FileDiscovery.FindAll(session.Notes));
 
+        Console.WriteLine("Reading configuration files...");
+        session.SetConfiguration(ConfigurationDiscovery.FindAll(session.Notes));
+
         Console.WriteLine("Checking relay addresses...");
         session.SetNetworkResults(RelayProbe.Check(session.Services));
 
