@@ -24,6 +24,7 @@ internal sealed class DiagnosticSession
     public List<string> Notes { get; } = new();
     public List<AntivirusProduct> AntivirusProducts { get; } = new();
     public string AntivirusNote { get; set; } = string.Empty;
+    public WindowsFirewallStatus Firewall { get; set; } = new();
     public List<SecuritySoftwareFinding> SecuritySoftware { get; } = new();
     public string SecuritySoftwareNote { get; set; } = string.Empty;
     public string SystemSummary { get; set; } = string.Empty;
@@ -86,6 +87,7 @@ internal sealed class DiagnosticSession
         Notes.Clear();
         AntivirusProducts.Clear();
         AntivirusNote = string.Empty;
+        Firewall = new WindowsFirewallStatus();
         SecuritySoftware.Clear();
         SecuritySoftwareNote = string.Empty;
         SystemSummary = string.Empty;

@@ -47,6 +47,7 @@ internal static class DiagnosticCollector
         Console.WriteLine("Reading security software...");
         session.AntivirusProducts.AddRange(AntivirusScanner.FindAll(out var antivirusNote));
         session.AntivirusNote = antivirusNote;
+        session.Firewall = WindowsFirewallReader.Read();
         session.SecuritySoftware.AddRange(SecuritySoftwareScanner.FindAll(
             session.AntivirusProducts,
             out var securitySoftwareNote));

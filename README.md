@@ -169,7 +169,7 @@ XML files are written as setting names and values. A file that is not XML is inc
 
 ### Antivirus and other security software
 
-Security Center reports each installed antivirus product. The product state is printed as enabled, disabled, snoozed, or expired, and whether definitions are up to date. When Windows Defender is not the active product and another antivirus is enabled, the report says Defender is deferred to that product. The original Security Center number stays in parentheses.
+Security Center reports each installed antivirus product. The product state is printed as enabled, disabled, snoozed, or expired, and whether definitions are up to date. When Windows Defender is not the active product and another antivirus is enabled, the report says Defender is deferred to that product. The original Security Center number stays in parentheses. The same section reports Windows Firewall: whether the firewall service is running, and whether the Domain, Private, and Public profiles are on or off. The active profile is marked current. This read does not need administrator rights.
 
 A second section matches installed programs and Windows services against expected antivirus, EDR, XDR, application control, firewall, DLP, web security, and related product names. That catches agents that do not register in Security Center. Products already shown in the Antivirus section are not repeated. The screen shows the product, category, and a service or install name. `anti-virus-report.txt` and `full-report.txt` also include the version, publisher, install location, and service status. A product that is not in the expected list is not shown. These reads do not need administrator rights.
 

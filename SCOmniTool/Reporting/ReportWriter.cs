@@ -375,6 +375,8 @@ internal static class ReportWriter
         {
             builder.AppendLine("  " + product.Name + "  " + product.ProductState);
         }
+
+        builder.AppendLine("  " + FormatFirewallSummary(session.Firewall));
     }
 
     private static void AppendSecuritySoftwareSummary(StringBuilder builder, DiagnosticSession session)
@@ -843,6 +845,57 @@ internal static class ReportWriter
             builder.AppendLine("    Path: " + product.Path);
             builder.AppendLine("    Product state: " + product.ProductState);
         }
+
+        AppendFirewallDetails(builder, session.Firewall);
+    }
+
+    internal static void AppendFirewallReport(StringBuilder builder, DiagnosticSession session)
+    {
+        var firewall = session.Firewall;
+        builder.AppendLine("Windows Firewall");
+        builder.AppendLine("Service: " + Display(firewall.ServiceStatus));
+        builder.AppendLine("Domain: " + Display(firewall.Domain));
+        builder.AppendLine("Private: " + Display(firewall.Private));
+        builder.AppendLine("Public: " + Display(firewall.Public));
+        if (!string.IsNullOrWhiteSpace(firewall.Error))
+        {
+            builder.AppendLine(firewall.Error);
+        }
+
+        builder.AppendLine();
+    }
+
+    private static void AppendFirewallDetails(StringBuilder builder, WindowsFirewallStatus firewall)
+    {
+        builder.AppendLine("  Windows Firewall");
+        builder.AppendLine("    Service: " + Display(firewall.ServiceStatus));
+        builder.AppendLine("    Domain: " + Display(firewall.Domain));
+        builder.AppendLine("    Private: " + Display(firewall.Private));
+        builder.AppendLine("    Public: " + Display(firewall.Public));
+        if (!string.IsNullOrWhiteSpace(firewall.Error))
+        {
+            builder.AppendLine("    " + firewall.Error);
+        }
+    }
+
+    private static string FormatFirewallSummary(WindowsFirewallStatus firewall)
+    {
+        var service = string.Equals(firewall.ServiceStatus, "Running", StringComparison.OrdinalIgnoreCase)
+            ? string.Empty
+            : "service " + Display(firewall.ServiceStatus) + "  ";
+        var text = "Windows Firewall  " + service +
+            "Domain " + Display(firewall.Domain) +
+            ", Private " + Display(firewall.Private) +
+            ", Public " + Display(firewall.Public);
+        if (!string.IsNullOrWhiteSpace(firewall.Error) &&
+            string.IsNullOrWhiteSpace(firewall.Domain) &&
+            string.IsNullOrWhiteSpace(firewall.Private) &&
+            string.IsNullOrWhiteSpace(firewall.Public))
+        {
+            return "Windows Firewall  " + firewall.Error;
+        }
+
+        return text;
     }
 
     public static string BuildSecuritySoftware(DiagnosticSession session)
