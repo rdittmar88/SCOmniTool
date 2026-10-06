@@ -64,7 +64,7 @@ internal static class DiagnosticCollector
         session.SystemReportText = session.SystemSummary
             + Environment.NewLine
             + Environment.NewLine
-            + SystemReport.BuildSnapshot();
+            + SystemReport.BuildReportDetails();
     }
 
     private static void AddServicesFromRegistry(DiagnosticSession session)

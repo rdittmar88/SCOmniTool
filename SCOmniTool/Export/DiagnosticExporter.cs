@@ -327,7 +327,7 @@ internal static class DiagnosticExporter
         var summary = string.IsNullOrWhiteSpace(session.SystemSummary)
             ? SystemReport.Build()
             : session.SystemSummary;
-        return summary + Environment.NewLine + Environment.NewLine + SystemReport.BuildSnapshot();
+        return summary + Environment.NewLine + Environment.NewLine + SystemReport.BuildReportDetails();
     }
 
     private static string BuildSecuritySoftwareReport(DiagnosticSession session)

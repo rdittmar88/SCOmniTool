@@ -97,7 +97,7 @@ The zip contains:
 | `anti-virus-report.txt` | Antivirus, antispyware, and firewall products, plus Defender actions that mention ScreenConnect |
 | `network-report.txt` | DNS and TCP result for every relay |
 | `configuration-report.txt` | Values from `app.config`, `system.config`, and `user.config` |
-| `system-report.txt` | Computer name, OS, architecture, manufacturer, model, CPU, and RAM, plus a one-second snapshot of uptime, processor use, RAM use, disk bytes per second, and disk queue length. It is not a performance history. |
+| `system-report.txt` | Computer name, OS, architecture, manufacturer, model, CPU, and RAM, plus installed display adapters, active monitors with resolution, orientation, and desktop arrangement, and a one-second snapshot of uptime, processor use, RAM use, disk bytes per second, disk queue length, and the top 5 processes by RAM and CPU. It is not a performance history. |
 
 `dxdiag` runs when you export. It can take about a minute.
 
