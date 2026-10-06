@@ -10,4 +10,5 @@ internal sealed class EventInfo
     public string Provider { get; set; } = string.Empty;
     public int EventId { get; set; }
     public string Message { get; set; } = string.Empty;
+    public bool MessageOnly { get; set; }
 }

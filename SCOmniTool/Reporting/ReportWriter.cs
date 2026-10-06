@@ -170,7 +170,7 @@ internal static class ReportWriter
     public static void WriteEventsCsv(IReadOnlyList<EventInfo> events, string path)
     {
         var builder = new StringBuilder();
-        builder.AppendLine("Time,Log,Level,Provider,EventId,Message");
+        builder.AppendLine("Time,Log,Level,Provider,EventId,Message,MessageOnly");
         foreach (var entry in events)
         {
             builder.Append(CsvField(FormatTime(entry.TimeCreated)));
@@ -184,6 +184,8 @@ internal static class ReportWriter
             builder.Append(CsvField(entry.EventId.ToString()));
             builder.Append(',');
             builder.Append(CsvField(entry.Message));
+            builder.Append(',');
+            builder.Append(entry.MessageOnly ? "yes" : "no");
             builder.AppendLine();
         }
 
@@ -1032,6 +1034,7 @@ internal static class ReportWriter
             ? "none"
             : string.Join(", ", session.EventLogsSearched)));
         builder.AppendLine("  Full event rows are written to eventviewerlogs.csv in the diagnostic zip.");
+        builder.AppendLine("  Message-only matches: " + session.Events.Count(entry => entry.MessageOnly));
     }
 
     private static string Flatten(string value)

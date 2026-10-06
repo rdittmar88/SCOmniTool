@@ -96,6 +96,13 @@ internal static class EventLogScanner
 
     private static EventInfo? TryCreate(string logName, EventRecord entry)
     {
+        var level = entry.Level;
+        if (level != 1 && level != 2 && level != 4)
+        {
+            return null;
+        }
+
+        var provider = entry.ProviderName ?? string.Empty;
         string xml;
         try
         {
@@ -107,17 +114,9 @@ internal static class EventLogScanner
         }
 
         var message = ReadMessage(entry);
-        var mentionsScreenConnect =
-            xml.IndexOf(Constants.ScreenConnectToken, StringComparison.OrdinalIgnoreCase) >= 0 ||
-            message.IndexOf(Constants.ScreenConnectToken, StringComparison.OrdinalIgnoreCase) >= 0;
-
-        if (!mentionsScreenConnect)
-        {
-            return null;
-        }
-
-        var level = entry.Level;
-        if (level != 1 && level != 2 && level != 4)
+        var inXml = xml.IndexOf(Constants.ScreenConnectToken, StringComparison.OrdinalIgnoreCase) >= 0;
+        var inMessage = message.IndexOf(Constants.ScreenConnectToken, StringComparison.OrdinalIgnoreCase) >= 0;
+        if (!inXml && !inMessage)
         {
             return null;
         }
@@ -127,9 +126,10 @@ internal static class EventLogScanner
             TimeCreated = entry.TimeCreated,
             LogName = logName,
             Level = LevelName(level),
-            Provider = entry.ProviderName ?? string.Empty,
+            Provider = provider,
             EventId = entry.Id,
-            Message = message
+            Message = message,
+            MessageOnly = inMessage && !inXml
         };
     }
 

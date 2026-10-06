@@ -8,7 +8,7 @@ internal static class Constants
     public const string ProcessWindowsClient = "ScreenConnect.WindowsClient";
     public const string ProcessWindowsBackstageShell = "ScreenConnect.WindowsBackstageShell";
     public const int DefaultRelayPort = 8041;
-    public const int DefaultEventWindowDays = 30;
+    public const int DefaultEventWindowDays = 10;
     public const int NetworkTimeoutMs = 5000;
     public const int DxDiagTimeoutMs = 180000;
 

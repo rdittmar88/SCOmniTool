@@ -47,7 +47,7 @@ The app will:
 |----------|---------|
 | `/s` | Print the report, write the diagnostic zip, and exit. The menu is skipped. With no path, the zip is saved next to the executable. |
 | `/s [zip path]` | Same as `/s`, but the zip uses that file name and folder. Example: `SCOmniTool.exe /s C:\Reports\machine.zip`. A missing folder is created. `.zip` is added when the path does not already end with it. |
-| `/days:N` | Search the last N days of events. The default is 30. |
+| `/days:N` | Search the last N days of events. The default is 10. |
 | `/all` | Search the retained logs instead of the day window. |
 
 **Exit codes:**
@@ -178,7 +178,7 @@ A second section matches installed programs and Windows services against expecte
 
 The Application and System logs are searched, plus any log whose name contains `ScreenConnect`.
 
-An event is kept when it is Information, Error, or Critical and the event XML or message contains `ScreenConnect`. The default window is the last 30 days.
+An event is kept when it is Information, Error, or Critical and the event XML or message contains `ScreenConnect`. The default window is the last 10 days. `/days:N` changes that window, and `/all` searches the retained logs. Every event in that window is read, including its full message. `eventviewerlogs.csv` marks `MessageOnly` as `yes` when ScreenConnect is in the message and not in the XML. The event section shows how many of those matches were found.
 
 ### Network
 
