@@ -97,6 +97,11 @@ internal static class DiagnosticExporter
                 Path.Combine(tempRoot, "full-report.txt"),
                 ReportWriter.BuildReport(session) + Environment.NewLine,
                 Encoding.UTF8);
+            File.WriteAllText(
+                Path.Combine(tempRoot, "processes-report.txt"),
+                "Processes report" + Environment.NewLine +
+                ReportWriter.BuildProcesses(session) + Environment.NewLine,
+                Encoding.UTF8);
             ReportWriter.WriteEventsCsv(
                 session.Events,
                 Path.Combine(tempRoot, "eventviewerlogs.csv"));

@@ -79,6 +79,15 @@ internal static class ReportWriter
         return builder.ToString().TrimEnd();
     }
 
+    public static string BuildProcesses(DiagnosticSession session)
+    {
+        var builder = new StringBuilder();
+        AppendProcesses(builder, session);
+        AppendServices(builder, session);
+        AppendFiles(builder, session);
+        return builder.ToString().TrimEnd();
+    }
+
     public static string BuildConfiguration(DiagnosticSession session)
     {
         var builder = new StringBuilder();
@@ -219,6 +228,7 @@ internal static class ReportWriter
     private static void AppendProcessSummary(StringBuilder builder, DiagnosticSession session)
     {
         Section(builder, "Processes (" + session.Processes.Count + ")");
+        builder.AppendLine("  Full process, service, and file location details are in processes-report.txt in the diagnostic zip.");
         if (session.Processes.Count == 0)
         {
             builder.AppendLine("  None");
