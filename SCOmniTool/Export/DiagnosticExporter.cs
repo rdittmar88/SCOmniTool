@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Globalization;
 using System.IO;
 using System.IO.Compression;
 using System.Management;
@@ -95,15 +94,21 @@ internal static class DiagnosticExporter
             Directory.CreateDirectory(tempRoot);
 
             File.WriteAllText(
-                Path.Combine(tempRoot, "discovery-report.txt"),
+                Path.Combine(tempRoot, "full-report.txt"),
                 ReportWriter.BuildReport(session) + Environment.NewLine,
                 Encoding.UTF8);
             ReportWriter.WriteEventsCsv(
                 session.Events,
-                Path.Combine(tempRoot, "events_" + machine + "_" + stamp + ".csv"));
+                Path.Combine(tempRoot, "eventviewerlogs.csv"));
             File.WriteAllText(
-                Path.Combine(tempRoot, "network.txt"),
+                Path.Combine(tempRoot, "network-report.txt"),
+                "Network report" + Environment.NewLine +
                 ReportWriter.BuildNetwork(session) + Environment.NewLine,
+                Encoding.UTF8);
+            File.WriteAllText(
+                Path.Combine(tempRoot, "configuration-report.txt"),
+                "Configuration report" + Environment.NewLine +
+                ReportWriter.BuildConfiguration(session) + Environment.NewLine,
                 Encoding.UTF8);
 
             Console.WriteLine("Running dxdiag. This can take up to a minute...");
@@ -111,18 +116,16 @@ internal static class DiagnosticExporter
 
             Console.WriteLine("Reading security software...");
             File.WriteAllText(
-                Path.Combine(tempRoot, "security-software.txt"),
-                BuildSecuritySoftwareReport(session),
-                Encoding.UTF8);
-            File.WriteAllText(
-                Path.Combine(tempRoot, "defender-actions.txt"),
+                Path.Combine(tempRoot, "anti-virus-report.txt"),
+                BuildSecuritySoftwareReport(session) +
+                Environment.NewLine +
                 ReportWriter.BuildDefenderActions(session) + Environment.NewLine,
                 Encoding.UTF8);
 
             Console.WriteLine("Reading system summary...");
             File.WriteAllText(
-                Path.Combine(tempRoot, "system-summary.txt"),
-                BuildSystemSummary(),
+                Path.Combine(tempRoot, "system-report.txt"),
+                (string.IsNullOrWhiteSpace(session.SystemSummary) ? SystemReport.Build() : session.SystemSummary) + Environment.NewLine,
                 Encoding.UTF8);
 
             Console.WriteLine("Writing zip...");
@@ -317,7 +320,7 @@ internal static class DiagnosticExporter
     private static string BuildSecuritySoftwareReport(DiagnosticSession session)
     {
         var builder = new StringBuilder();
-        builder.AppendLine("Security software");
+        builder.AppendLine("Antivirus report");
         builder.AppendLine("Machine: " + Environment.MachineName);
         builder.AppendLine("Collected: " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
         builder.AppendLine();
@@ -396,94 +399,6 @@ internal static class DiagnosticExporter
         }
     }
 
-    private static string BuildSystemSummary()
-    {
-        var builder = new StringBuilder();
-        builder.AppendLine("System summary");
-        builder.AppendLine("Collected: " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
-        builder.AppendLine("Computer name: " + Environment.MachineName);
-
-        var wroteOs = false;
-        try
-        {
-            using var searcher = new ManagementObjectSearcher(
-                "SELECT Caption, Version, BuildNumber, OSArchitecture FROM Win32_OperatingSystem");
-            using var results = searcher.Get();
-            foreach (ManagementObject item in results)
-            {
-                using (item)
-                {
-                    builder.AppendLine("OS: " + Property(item, "Caption"));
-                    builder.AppendLine("Version: " + Property(item, "Version"));
-                    builder.AppendLine("Build: " + Property(item, "BuildNumber"));
-                    builder.AppendLine("Architecture: " + Property(item, "OSArchitecture"));
-                    wroteOs = true;
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            builder.AppendLine("Could not read Win32_OperatingSystem: " + ex.Message);
-        }
-
-        if (!wroteOs)
-        {
-            builder.AppendLine("OS version: " + Environment.OSVersion);
-            builder.AppendLine("Architecture: " + (Environment.Is64BitOperatingSystem ? "64-bit" : "32-bit"));
-        }
-
-        try
-        {
-            using var searcher = new ManagementObjectSearcher(
-                "SELECT Manufacturer, Model, TotalPhysicalMemory FROM Win32_ComputerSystem");
-            using var results = searcher.Get();
-            foreach (ManagementObject item in results)
-            {
-                using (item)
-                {
-                    builder.AppendLine("Manufacturer: " + Property(item, "Manufacturer"));
-                    builder.AppendLine("Model: " + Property(item, "Model"));
-                    builder.AppendLine("Installed RAM: " + FormatRam(item["TotalPhysicalMemory"]));
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            builder.AppendLine("Could not read Win32_ComputerSystem: " + ex.Message);
-        }
-
-        try
-        {
-            using var searcher = new ManagementObjectSearcher(
-                "SELECT Name, NumberOfCores, NumberOfLogicalProcessors FROM Win32_Processor");
-            using var results = searcher.Get();
-            var index = 0;
-            foreach (ManagementObject item in results)
-            {
-                using (item)
-                {
-                    index++;
-                    var prefix = index == 1 ? "CPU" : "CPU " + index;
-                    builder.AppendLine(prefix + ": " + Property(item, "Name"));
-                    builder.AppendLine("Cores: " + Property(item, "NumberOfCores"));
-                    builder.AppendLine("Logical processors: " + Property(item, "NumberOfLogicalProcessors"));
-                }
-            }
-
-            if (index == 0)
-            {
-                builder.AppendLine("Logical processors: " + Environment.ProcessorCount);
-            }
-        }
-        catch (Exception ex)
-        {
-            builder.AppendLine("Could not read Win32_Processor: " + ex.Message);
-            builder.AppendLine("Logical processors: " + Environment.ProcessorCount);
-        }
-
-        return builder.ToString();
-    }
-
     private static string Property(ManagementObject item, string name)
     {
         try
@@ -499,25 +414,6 @@ internal static class DiagnosticExporter
         catch
         {
             return "not available";
-        }
-    }
-
-    private static string FormatRam(object? value)
-    {
-        if (value == null)
-        {
-            return "not available";
-        }
-
-        try
-        {
-            var bytes = Convert.ToUInt64(value, CultureInfo.InvariantCulture);
-            var gigabytes = bytes / 1024d / 1024d / 1024d;
-            return gigabytes.ToString("0.0", CultureInfo.InvariantCulture) + " GB";
-        }
-        catch
-        {
-            return value.ToString() ?? "not available";
         }
     }
 

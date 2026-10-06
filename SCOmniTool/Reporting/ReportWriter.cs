@@ -11,19 +11,19 @@ internal static class ReportWriter
     public static void PrintReport(DiagnosticSession session)
     {
         Console.WriteLine();
-        Console.WriteLine(BuildReport(session));
+        Console.WriteLine(BuildSummary(session));
     }
 
     public static void PrintNetwork(DiagnosticSession session)
     {
         Console.WriteLine();
-        Console.WriteLine(BuildNetwork(session));
+        Console.WriteLine(BuildNetworkSummary(session));
     }
 
     public static void PrintConfiguration(DiagnosticSession session)
     {
         Console.WriteLine();
-        Console.WriteLine(BuildConfiguration(session));
+        Console.WriteLine(BuildConfigurationSummary(session));
     }
 
     public static string BuildReport(DiagnosticSession session)
@@ -45,6 +45,28 @@ internal static class ReportWriter
         AppendDefenderActions(builder, session);
         AppendEvents(builder, session);
 
+        return builder.ToString().TrimEnd();
+    }
+
+    public static string BuildSummary(DiagnosticSession session)
+    {
+        var builder = new StringBuilder();
+        builder.AppendLine("ScreenConnect Diagnostic Report");
+        builder.AppendLine("Machine: " + Environment.MachineName);
+        builder.AppendLine("Scanned: " + session.ScannedAt.ToString("yyyy-MM-dd HH:mm:ss"));
+        builder.AppendLine("Administrator: " + (session.IsAdministrator ? "yes" : "no"));
+
+        AppendSystemSummary(builder, session);
+        AppendProcessSummary(builder, session);
+        AppendServiceSummary(builder, session);
+        AppendClientSummary(builder, session);
+        AppendRegistrySummary(builder, session);
+        AppendFileSummary(builder, session);
+        AppendConfigurationSummary(builder, session);
+        AppendNetworkSummary(builder, session);
+        AppendAntivirusSummary(builder, session);
+        AppendDefenderSummary(builder, session);
+        AppendEvents(builder, session);
         return builder.ToString().TrimEnd();
     }
 
@@ -157,6 +179,222 @@ internal static class ReportWriter
         System.IO.File.WriteAllText(path, builder.ToString(), Encoding.UTF8);
     }
 
+    public static string BuildNetworkSummary(DiagnosticSession session)
+    {
+        var builder = new StringBuilder();
+        AppendNetworkSummary(builder, session);
+        return builder.ToString().TrimEnd();
+    }
+
+    public static string BuildConfigurationSummary(DiagnosticSession session)
+    {
+        var builder = new StringBuilder();
+        AppendConfigurationSummary(builder, session);
+        return builder.ToString().TrimEnd();
+    }
+
+    private static void AppendSystemSummary(StringBuilder builder, DiagnosticSession session)
+    {
+        Section(builder, "System");
+        if (string.IsNullOrWhiteSpace(session.SystemSummary))
+        {
+            builder.AppendLine("  not collected");
+            return;
+        }
+
+        var lines = session.SystemSummary.Replace("\r\n", "\n").Replace('\r', '\n').Split('\n');
+        foreach (var line in lines)
+        {
+            if (line == "System report")
+            {
+                continue;
+            }
+
+            builder.AppendLine("  " + line);
+        }
+    }
+
+    private static void AppendProcessSummary(StringBuilder builder, DiagnosticSession session)
+    {
+        Section(builder, "Processes (" + session.Processes.Count + ")");
+        if (session.Processes.Count == 0)
+        {
+            builder.AppendLine("  None");
+            return;
+        }
+
+        foreach (var process in session.Processes.OrderBy(item => item.DisplayName).ThenBy(item => item.Id))
+        {
+            builder.AppendLine($"  PID {process.Id}  {process.DisplayName}  {process.Status}");
+        }
+    }
+
+    private static void AppendServiceSummary(StringBuilder builder, DiagnosticSession session)
+    {
+        Section(builder, "Services (" + session.Services.Count + ")");
+        if (session.Services.Count == 0)
+        {
+            builder.AppendLine("  None");
+            return;
+        }
+
+        foreach (var service in session.Services.OrderBy(item => item.Name, StringComparer.OrdinalIgnoreCase))
+        {
+            builder.AppendLine("  " + service.Name + "  " + service.Status + "  " + FormatRelay(service));
+        }
+    }
+
+    private static void AppendClientSummary(StringBuilder builder, DiagnosticSession session)
+    {
+        Section(builder, "Clients (" + session.Clients.Count + ")");
+        if (session.Clients.Count == 0)
+        {
+            builder.AppendLine("  None");
+            return;
+        }
+
+        foreach (var client in session.Clients.OrderBy(item => item.DisplayName, StringComparer.OrdinalIgnoreCase))
+        {
+            var service = FindService(session, client);
+            var relay = service == null ? "not matched to a service" : FormatRelay(service);
+            builder.AppendLine("  " + client.DisplayName + "  " + relay);
+        }
+    }
+
+    private static void AppendRegistrySummary(StringBuilder builder, DiagnosticSession session)
+    {
+        Section(builder, "Registry keys (" + session.RegistryKeys.Count + ")");
+        if (session.RegistryKeys.Count == 0)
+        {
+            builder.AppendLine("  None");
+            return;
+        }
+
+        foreach (var key in session.RegistryKeys
+                     .OrderBy(item => item.Type)
+                     .ThenBy(item => item.DisplayValue, StringComparer.OrdinalIgnoreCase))
+        {
+            builder.AppendLine("  " + RegistryTypeLabel(key.Type) + "  " + key.DisplayValue);
+        }
+    }
+
+    private static void AppendFileSummary(StringBuilder builder, DiagnosticSession session)
+    {
+        AppendLocatedFiles(builder, session, summary: true);
+    }
+
+    private static void AppendConfigurationSummary(StringBuilder builder, DiagnosticSession session)
+    {
+        Section(builder, "Configuration (" + session.ConfigurationFiles.Count + ")");
+        if (session.ConfigurationFiles.Count == 0)
+        {
+            builder.AppendLine("  None");
+            return;
+        }
+
+        string? current = null;
+        foreach (var file in session.ConfigurationFiles)
+        {
+            var header = file.LocationLabel + ": " + file.DirectoryPath;
+            if (!string.Equals(current, header, StringComparison.OrdinalIgnoreCase))
+            {
+                if (current != null)
+                {
+                    builder.AppendLine();
+                }
+
+                builder.AppendLine("  " + header);
+                current = header;
+            }
+
+            builder.AppendLine("    " + file.FileName + "  " + ConfigStatus(file));
+        }
+    }
+
+    private static string ConfigStatus(ConfigFileRecord file)
+    {
+        if (!string.IsNullOrWhiteSpace(file.Error))
+        {
+            return "could not read";
+        }
+
+        return file.Found ? "found" : "not found";
+    }
+
+    private static void AppendNetworkSummary(StringBuilder builder, DiagnosticSession session)
+    {
+        Section(builder, "Relay network checks (" + session.NetworkResults.Count + ")");
+        builder.AppendLine("  These checks only confirm basic network connectivity.");
+        builder.AppendLine("  A firewall may still block ScreenConnect-specific traffic when a port shows open.");
+        if (session.NetworkResults.Count == 0)
+        {
+            builder.AppendLine("  No relay addresses were found.");
+        }
+
+        foreach (var result in session.NetworkResults)
+        {
+            builder.AppendLine("  " + result.Host + ":" + result.Port + "  DNS " + DnsSummary(result) + "  TCP " + result.PortStatus);
+        }
+    }
+
+    private static string DnsSummary(RelayCheckResult result)
+    {
+        if (result.HostIsIp)
+        {
+            return "not required";
+        }
+
+        if (!string.IsNullOrWhiteSpace(result.DnsError) || result.ResolvedAddresses.Count == 0)
+        {
+            return "failed";
+        }
+
+        return "ok";
+    }
+
+    private static void AppendAntivirusSummary(StringBuilder builder, DiagnosticSession session)
+    {
+        Section(builder, "Antivirus (" + session.AntivirusProducts.Count + ")");
+        if (!string.IsNullOrWhiteSpace(session.AntivirusNote))
+        {
+            builder.AppendLine("  " + session.AntivirusNote);
+        }
+
+        if (session.AntivirusProducts.Count == 0 && string.IsNullOrWhiteSpace(session.AntivirusNote))
+        {
+            builder.AppendLine("  None");
+        }
+
+        foreach (var product in session.AntivirusProducts)
+        {
+            builder.AppendLine("  " + product.Name + "  " + product.ProductState);
+        }
+    }
+
+    private static void AppendDefenderSummary(StringBuilder builder, DiagnosticSession session)
+    {
+        var title = session.DefenderActionsCollected
+            ? "Defender actions (" + session.DefenderActions.Count + ")"
+            : "Defender actions";
+        Section(builder, title);
+        builder.AppendLine("  Window: " + session.EventWindowDescription);
+        if (!session.DefenderActionsCollected)
+        {
+            builder.AppendLine("  " + (string.IsNullOrWhiteSpace(session.DefenderActionsNote)
+                ? "Defender actions were not collected."
+                : session.DefenderActionsNote));
+            return;
+        }
+
+        if (session.DefenderActions.Count == 0)
+        {
+            builder.AppendLine("  None");
+            return;
+        }
+
+        builder.AppendLine("  Details are in anti-virus-report.txt in the diagnostic zip.");
+    }
+
     private static void AppendProcesses(StringBuilder builder, DiagnosticSession session)
     {
         Section(builder, "Processes (" + session.Processes.Count + ")");
@@ -248,19 +486,56 @@ internal static class ReportWriter
 
     private static void AppendFiles(StringBuilder builder, DiagnosticSession session)
     {
-        Section(builder, "File Locations (" + session.FileItems.Count + ")");
-        if (session.FileItems.Count == 0)
+        AppendLocatedFiles(builder, session, summary: false);
+    }
+
+    private static void AppendLocatedFiles(StringBuilder builder, DiagnosticSession session, bool summary)
+    {
+        var downloads = 0;
+        var others = new List<FileItemInfo>();
+        foreach (var item in session.FileItems)
+        {
+            if (item.Type == FileItemType.DownloadFile)
+            {
+                downloads++;
+            }
+            else
+            {
+                others.Add(item);
+            }
+        }
+
+        var shown = others.Count == 0 && downloads == 0 ? 0 : others.Count + 1;
+        Section(builder, "File Locations (" + shown + ")");
+        if (shown == 0)
         {
             builder.AppendLine("  None");
             return;
         }
 
-        foreach (var item in session.FileItems
+        foreach (var item in others
                      .OrderBy(entry => entry.Type)
                      .ThenBy(entry => entry.Path, StringComparer.OrdinalIgnoreCase))
         {
-            builder.AppendLine("  " + FileTypeLabel(item.Type));
-            builder.AppendLine("    " + item.Path);
+            if (summary)
+            {
+                builder.AppendLine("  " + FileTypeLabel(item.Type) + "  " + item.Path);
+            }
+            else
+            {
+                builder.AppendLine("  " + FileTypeLabel(item.Type));
+                builder.AppendLine("    " + item.Path);
+            }
+        }
+
+        if (summary)
+        {
+            builder.AppendLine("  Download files  " + downloads);
+        }
+        else
+        {
+            builder.AppendLine("  Download files");
+            builder.AppendLine("    " + downloads);
         }
     }
 
@@ -371,7 +646,7 @@ internal static class ReportWriter
         builder.AppendLine("  Logs: " + (session.EventLogsSearched.Count == 0
             ? "none"
             : string.Join(", ", session.EventLogsSearched)));
-        builder.AppendLine("  Full event rows are written into the diagnostic zip.");
+        builder.AppendLine("  Full event rows are written to eventviewerlogs.csv in the diagnostic zip.");
     }
 
     private static string Flatten(string value)

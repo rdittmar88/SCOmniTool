@@ -85,17 +85,19 @@ Export saves into the working directory and asks for a file name. The default fi
 {MachineName}_{yyyyMMdd_HHmmss}_diagnostics.zip
 ```
 
+The screen shows a short summary of each category, including a system summary. The zip holds the full values.
+
 The zip contains:
 
 | File | Contents |
 |------|----------|
-| `discovery-report.txt` | Installations, services, keys, files, configuration, relays, antivirus, Defender actions, event count, and the latest network results |
-| `events_{MachineName}_{yyyyMMdd_HHmmss}.csv` | Matching event log rows |
 | `dxdiag.txt` | Full `dxdiag /t` output |
-| `security-software.txt` | Antivirus, antispyware, and firewall products from Security Center |
-| `defender-actions.txt` | Defender actions that mention ScreenConnect, or a note that they were not collected |
-| `network.txt` | Latest DNS and TCP result for every relay |
-| `system-summary.txt` | Computer name, OS, architecture, manufacturer, model, CPU, and RAM |
+| `eventviewerlogs.csv` | Matching event log rows |
+| `full-report.txt` | Processes, services, clients, registry keys, file locations, configuration values, relays, antivirus, Defender actions, and the event count |
+| `anti-virus-report.txt` | Antivirus, antispyware, and firewall products, plus Defender actions that mention ScreenConnect |
+| `network-report.txt` | DNS and TCP result for every relay |
+| `configuration-report.txt` | Values from `app.config`, `system.config`, and `user.config` |
+| `system-report.txt` | Computer name, OS, architecture, manufacturer, model, CPU, and RAM |
 
 `dxdiag` runs when you export. It can take about a minute.
 
@@ -115,7 +117,7 @@ Dump data and rerun all reports clears the installations, events, network result
 - `ScreenConnect.WindowsClient.exe`
 - `ScreenConnect.WindowsBackstageShell.exe`
 
-The report labels the process id as `PID`, then lists a name that includes the install thumbprint when it can be read, status (`Running` or `Not responding`), the executable path, and the command used to start the process. The thumbprint is the parenthetical suffix on the `ScreenConnect Client (...)` folder, so two clients are not both labeled only `ScreenConnect.ClientService`. If the path or command cannot be read, that field is shown as unavailable and the rest of the run continues. Session 0 services often hide the path and command from a standard user.
+The screen lists the process id as `PID`, a name that includes the install thumbprint when it can be read, and status (`Running` or `Not responding`). `full-report.txt` also includes the executable path and the command used to start the process. The thumbprint is the parenthetical suffix on the `ScreenConnect Client (...)` folder, so two clients are not both labeled only `ScreenConnect.ClientService`. If the path or command cannot be read, that field is shown as unavailable in the full report and the rest of the run continues. Session 0 services often hide the path and command from a standard user.
 
 ### Services and clients
 
@@ -146,11 +148,11 @@ The relay is read from the service `ImagePath`:
 | User config folders | `C:\Users\{User}\AppData\Local\ScreenConnect Client (...)` |
 | System config folders | `C:\Windows\SysWOW64\config\systemprofile\AppData\Local\ScreenConnect Client (...)` |
 | System temp folders | `C:\Windows\SystemTemp\ScreenConnect\` |
-| Download files | `C:\Users\{User}\Downloads\` files containing `ScreenConnect` in the filename |
+| Download files | `C:\Users\{User}\Downloads\` files containing `ScreenConnect` in the filename. The report shows the count, not each file. |
 
 ### Configuration
 
-The Configuration section of the diagnostic report reads each file from the client directory itself. A missing file is listed as not found. The same section is included in `discovery-report.txt`.
+The Configuration section on screen lists each file as found or not found. Setting values are written to `configuration-report.txt` and `full-report.txt`. A missing file is listed as not found.
 
 | Directory | Files |
 |-----------|-------|
@@ -159,7 +161,7 @@ The Configuration section of the diagnostic report reads each file from the clie
 | `C:\Windows\SysWOW64\config\systemprofile\AppData\Local\ScreenConnect Client (...)` | `user.config` |
 | `C:\ProgramData\ScreenConnect Client (...)` | `user.config` |
 
-XML files are printed as setting names and values. A file that is not XML is included as its text.
+XML files are written as setting names and values. A file that is not XML is included as its text.
 
 ### Antivirus
 

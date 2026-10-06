@@ -5,6 +5,7 @@ using SCOmniTool.Discovery;
 using SCOmniTool.Events;
 using SCOmniTool.Models;
 using SCOmniTool.Network;
+using SCOmniTool.Reporting;
 using SCOmniTool.Security;
 
 namespace SCOmniTool;
@@ -56,6 +57,9 @@ internal static class DiagnosticCollector
         {
             session.MarkDefenderActionsSkipped();
         }
+
+        Console.WriteLine("Reading system summary...");
+        session.SystemSummary = SystemReport.Build();
     }
 
     private static void AddServicesFromRegistry(DiagnosticSession session)

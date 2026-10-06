@@ -23,6 +23,7 @@ internal sealed class DiagnosticSession
     public List<string> Notes { get; } = new();
     public List<AntivirusProduct> AntivirusProducts { get; } = new();
     public string AntivirusNote { get; set; } = string.Empty;
+    public string SystemSummary { get; set; } = string.Empty;
     public List<EventInfo> DefenderActions { get; } = new();
     public bool DefenderActionsCollected { get; set; }
     public string DefenderActionsNote { get; set; } = string.Empty;
@@ -75,6 +76,7 @@ internal sealed class DiagnosticSession
         Notes.Clear();
         AntivirusProducts.Clear();
         AntivirusNote = string.Empty;
+        SystemSummary = string.Empty;
         DefenderActions.Clear();
         DefenderActionsCollected = false;
         DefenderActionsNote = string.Empty;
