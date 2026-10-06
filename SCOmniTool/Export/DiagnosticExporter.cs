@@ -362,6 +362,8 @@ internal static class DiagnosticExporter
 
         AppendSecurityProducts(builder, "AntiSpywareProduct", "Antispyware");
         AppendSecurityProducts(builder, "FirewallProduct", "Firewall");
+        builder.AppendLine();
+        builder.AppendLine(ReportWriter.BuildSecuritySoftware(session));
         return builder.ToString();
     }
 

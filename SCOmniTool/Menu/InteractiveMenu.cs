@@ -40,8 +40,8 @@ internal static class InteractiveMenu
                         break;
                     case "3":
                         Console.WriteLine();
-                        Console.WriteLine("Checking relay addresses...");
-                        session.SetNetworkResults(RelayProbe.Check(session.Services));
+                        Console.WriteLine("Checking network...");
+                        NetworkChecks.Run(session);
                         ReportWriter.PrintNetwork(session);
                         break;
                     case "4":

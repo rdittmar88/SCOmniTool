@@ -20,9 +20,12 @@ internal sealed class DiagnosticSession
     public List<EventInfo> Events { get; } = new();
     public List<string> EventLogsSearched { get; } = new();
     public List<RelayCheckResult> NetworkResults { get; } = new();
+    public NetworkEnvironment Network { get; private set; } = new();
     public List<string> Notes { get; } = new();
     public List<AntivirusProduct> AntivirusProducts { get; } = new();
     public string AntivirusNote { get; set; } = string.Empty;
+    public List<SecuritySoftwareFinding> SecuritySoftware { get; } = new();
+    public string SecuritySoftwareNote { get; set; } = string.Empty;
     public string SystemSummary { get; set; } = string.Empty;
     public string SystemReportText { get; set; } = string.Empty;
     public List<EventInfo> DefenderActions { get; } = new();
@@ -45,6 +48,11 @@ internal sealed class DiagnosticSession
     {
         NetworkResults.Clear();
         NetworkResults.AddRange(results);
+    }
+
+    public void SetNetworkEnvironment(NetworkEnvironment environment)
+    {
+        Network = environment ?? new NetworkEnvironment();
     }
 
     public void SetDefenderResult(DefenderScanResult result)
@@ -74,9 +82,12 @@ internal sealed class DiagnosticSession
         Events.Clear();
         EventLogsSearched.Clear();
         NetworkResults.Clear();
+        Network = new NetworkEnvironment();
         Notes.Clear();
         AntivirusProducts.Clear();
         AntivirusNote = string.Empty;
+        SecuritySoftware.Clear();
+        SecuritySoftwareNote = string.Empty;
         SystemSummary = string.Empty;
         SystemReportText = string.Empty;
         DefenderActions.Clear();

@@ -42,6 +42,7 @@ internal static class ReportWriter
         AppendConfiguration(builder, session);
         AppendNetwork(builder, session);
         AppendAntivirus(builder, session);
+        AppendSecuritySoftware(builder, session);
         AppendDefenderActions(builder, session);
         AppendEvents(builder, session);
 
@@ -65,6 +66,7 @@ internal static class ReportWriter
         AppendConfigurationSummary(builder, session);
         AppendNetworkSummary(builder, session);
         AppendAntivirusSummary(builder, session);
+        AppendSecuritySoftwareSummary(builder, session);
         AppendDefenderSummary(builder, session);
         AppendEvents(builder, session);
         return builder.ToString().TrimEnd();
@@ -335,6 +337,10 @@ internal static class ReportWriter
         {
             builder.AppendLine("  " + result.Host + ":" + result.Port + "  DNS " + DnsSummary(result) + "  TCP " + result.PortStatus);
         }
+
+        AppendAdapterSummary(builder, session);
+        AppendVpnSummary(builder, session);
+        AppendProxySummary(builder, session);
     }
 
     private static string DnsSummary(RelayCheckResult result)
@@ -368,6 +374,26 @@ internal static class ReportWriter
         foreach (var product in session.AntivirusProducts)
         {
             builder.AppendLine("  " + product.Name + "  " + product.ProductState);
+        }
+    }
+
+    private static void AppendSecuritySoftwareSummary(StringBuilder builder, DiagnosticSession session)
+    {
+        Section(builder, "Security software (" + session.SecuritySoftware.Count + ")");
+        if (!string.IsNullOrWhiteSpace(session.SecuritySoftwareNote))
+        {
+            builder.AppendLine("  " + session.SecuritySoftwareNote);
+        }
+
+        if (session.SecuritySoftware.Count == 0)
+        {
+            builder.AppendLine("  None");
+            return;
+        }
+
+        foreach (var finding in session.SecuritySoftware)
+        {
+            builder.AppendLine("  " + finding.Name + "  " + finding.Category + "  " + SummaryEvidence(finding));
         }
     }
 
@@ -563,16 +589,224 @@ internal static class ReportWriter
             .Where(service => string.IsNullOrWhiteSpace(service.RelayHost))
             .Select(service => service.Name)
             .ToList();
-        if (missing.Count == 0)
+        if (missing.Count > 0)
         {
+            builder.AppendLine("  No relay address in ImagePath:");
+            foreach (var name in missing)
+            {
+                builder.AppendLine("    " + name);
+            }
+        }
+
+        AppendAdapterDetails(builder, session);
+        AppendVpnDetails(builder, session);
+        AppendProxyDetails(builder, session);
+    }
+
+    private static void AppendAdapterSummary(StringBuilder builder, DiagnosticSession session)
+    {
+        Section(builder, "Active network adapters (" + session.Network.ActiveAdapters.Count + ")");
+        if (!string.IsNullOrWhiteSpace(session.Network.AdapterError))
+        {
+            builder.AppendLine("  " + session.Network.AdapterError);
+        }
+
+        if (session.Network.ActiveAdapters.Count == 0)
+        {
+            builder.AppendLine("  None");
             return;
         }
 
-        builder.AppendLine("  No relay address in ImagePath:");
-        foreach (var name in missing)
+        foreach (var adapter in session.Network.ActiveAdapters)
         {
-            builder.AppendLine("    " + name);
+            builder.AppendLine("  " + adapter.Name + "  " + adapter.Kind + "  " + FirstAddress(adapter));
         }
+    }
+
+    private static void AppendVpnSummary(StringBuilder builder, DiagnosticSession session)
+    {
+        Section(builder, "VPN profiles (" + session.Network.VpnProfiles.Count + ")");
+        if (!string.IsNullOrWhiteSpace(session.Network.VpnProfileError))
+        {
+            builder.AppendLine("  " + session.Network.VpnProfileError);
+        }
+
+        if (session.Network.VpnProfiles.Count == 0)
+        {
+            builder.AppendLine("  None");
+        }
+        else
+        {
+            foreach (var profile in session.Network.VpnProfiles)
+            {
+                var server = string.IsNullOrWhiteSpace(profile.Server) ? string.Empty : "  " + profile.Server;
+                builder.AppendLine("  " + profile.Name + "  " + profile.Status + server);
+            }
+        }
+
+        Section(builder, "Active VPNs (" + session.Network.ActiveVpns.Count + ")");
+        if (!string.IsNullOrWhiteSpace(session.Network.ActiveVpnError))
+        {
+            builder.AppendLine("  " + session.Network.ActiveVpnError);
+        }
+
+        if (session.Network.ActiveVpns.Count == 0)
+        {
+            builder.AppendLine("  None");
+            return;
+        }
+
+        foreach (var vpn in session.Network.ActiveVpns)
+        {
+            var device = string.IsNullOrWhiteSpace(vpn.Device) ? vpn.Source : vpn.Device;
+            builder.AppendLine("  " + vpn.Name + "  " + vpn.Status + "  " + device);
+        }
+    }
+
+    private static void AppendProxySummary(StringBuilder builder, DiagnosticSession session)
+    {
+        var proxy = session.Network.Proxy;
+        Section(builder, "Proxy");
+        if (!string.IsNullOrWhiteSpace(proxy.UserError))
+        {
+            builder.AppendLine("  " + proxy.UserError);
+        }
+
+        var server = proxy.UserProxy == "enabled" && !string.IsNullOrWhiteSpace(proxy.ProxyServer)
+            ? "  " + proxy.ProxyServer
+            : string.Empty;
+        builder.AppendLine("  User proxy  " + Display(proxy.UserProxy) + server);
+        builder.AppendLine("  Auto-detect  " + Display(proxy.AutoDetect));
+        builder.AppendLine("  Auto-config  " + Display(proxy.AutoConfigUrl));
+        if (!string.IsNullOrWhiteSpace(proxy.WinHttpError))
+        {
+            builder.AppendLine("  " + proxy.WinHttpError);
+        }
+
+        builder.AppendLine("  WinHTTP  " + Display(proxy.WinHttpProxy));
+        builder.AppendLine("  Environment  " + (proxy.EnvironmentProxies.Count == 0
+            ? "none"
+            : string.Join(", ", proxy.EnvironmentProxies)));
+    }
+
+    private static void AppendAdapterDetails(StringBuilder builder, DiagnosticSession session)
+    {
+        Section(builder, "Active network adapters (" + session.Network.ActiveAdapters.Count + ")");
+        builder.AppendLine("  Wired and wireless adapters that are up. VPN adapters are listed with the active VPNs.");
+        if (!string.IsNullOrWhiteSpace(session.Network.AdapterError))
+        {
+            builder.AppendLine("  " + session.Network.AdapterError);
+        }
+
+        if (session.Network.ActiveAdapters.Count == 0)
+        {
+            builder.AppendLine("  None");
+            return;
+        }
+
+        foreach (var adapter in session.Network.ActiveAdapters)
+        {
+            builder.AppendLine("  " + adapter.Name);
+            builder.AppendLine("    Kind: " + Display(adapter.Kind));
+            builder.AppendLine("    Description: " + Display(adapter.Description));
+            builder.AppendLine("    MAC: " + Display(adapter.MacAddress));
+            builder.AppendLine("    Speed: " + Display(adapter.Speed));
+            builder.AppendLine("    DHCP: " + Display(adapter.Dhcp));
+            builder.AppendLine("    Addresses: " + JoinValues(adapter.Addresses));
+            builder.AppendLine("    Gateways: " + JoinValues(adapter.Gateways));
+            builder.AppendLine("    DNS: " + JoinValues(adapter.DnsServers));
+        }
+    }
+
+    private static void AppendVpnDetails(StringBuilder builder, DiagnosticSession session)
+    {
+        Section(builder, "VPN profiles (" + session.Network.VpnProfiles.Count + ")");
+        builder.AppendLine("  Windows VPN profiles from the user and machine phone books.");
+        if (!string.IsNullOrWhiteSpace(session.Network.VpnProfileError))
+        {
+            builder.AppendLine("  " + session.Network.VpnProfileError);
+        }
+
+        if (session.Network.VpnProfiles.Count == 0)
+        {
+            builder.AppendLine("  None");
+        }
+        else
+        {
+            foreach (var profile in session.Network.VpnProfiles)
+            {
+                AppendVpn(builder, profile);
+            }
+        }
+
+        Section(builder, "Active VPNs (" + session.Network.ActiveVpns.Count + ")");
+        builder.AppendLine("  Connected Windows VPN profiles, plus network adapters that are up and look like a VPN.");
+        builder.AppendLine("  A third-party VPN that is not connected and has no Windows VPN profile is not listed.");
+        if (!string.IsNullOrWhiteSpace(session.Network.ActiveVpnError))
+        {
+            builder.AppendLine("  " + session.Network.ActiveVpnError);
+        }
+
+        if (session.Network.ActiveVpns.Count == 0)
+        {
+            builder.AppendLine("  None");
+            return;
+        }
+
+        foreach (var vpn in session.Network.ActiveVpns)
+        {
+            AppendVpn(builder, vpn);
+        }
+    }
+
+    private static void AppendVpn(StringBuilder builder, VpnConnectionInfo vpn)
+    {
+        builder.AppendLine("  " + vpn.Name);
+        builder.AppendLine("    Status: " + Display(vpn.Status));
+        builder.AppendLine("    Device: " + Display(vpn.Device));
+        builder.AppendLine("    Server: " + Display(vpn.Server));
+        builder.AppendLine("    Source: " + Display(vpn.Source));
+        if (!string.IsNullOrWhiteSpace(vpn.Phonebook))
+        {
+            builder.AppendLine("    Phone book: " + vpn.Phonebook);
+        }
+    }
+
+    private static void AppendProxyDetails(StringBuilder builder, DiagnosticSession session)
+    {
+        var proxy = session.Network.Proxy;
+        Section(builder, "Proxy");
+        if (!string.IsNullOrWhiteSpace(proxy.UserError))
+        {
+            builder.AppendLine("  " + proxy.UserError);
+        }
+
+        builder.AppendLine("  User proxy: " + Display(proxy.UserProxy));
+        builder.AppendLine("  Proxy server: " + Display(proxy.ProxyServer));
+        builder.AppendLine("  Bypass: " + Display(proxy.ProxyBypass));
+        builder.AppendLine("  Auto-config URL: " + Display(proxy.AutoConfigUrl));
+        builder.AppendLine("  Auto-detect: " + Display(proxy.AutoDetect));
+        if (!string.IsNullOrWhiteSpace(proxy.WinHttpError))
+        {
+            builder.AppendLine("  " + proxy.WinHttpError);
+        }
+
+        builder.AppendLine("  WinHTTP: " + Display(proxy.WinHttpProxy));
+        builder.AppendLine("  WinHTTP bypass: " + Display(proxy.WinHttpBypass));
+        builder.AppendLine("  Environment: " + (proxy.EnvironmentProxies.Count == 0
+            ? "none"
+            : string.Join(", ", proxy.EnvironmentProxies)));
+    }
+
+    private static string FirstAddress(NetworkAdapterInfo adapter)
+    {
+        var ipv4 = adapter.Addresses.FirstOrDefault(address => address.IndexOf(':') < 0 && address.IndexOf('.') >= 0);
+        return ipv4 ?? adapter.Addresses.FirstOrDefault() ?? "no address";
+    }
+
+    private static string JoinValues(List<string> values)
+    {
+        return values.Count == 0 ? "none" : string.Join(", ", values);
     }
 
     public static void PrintDefenderActions(DiagnosticSession session)
@@ -609,6 +843,94 @@ internal static class ReportWriter
             builder.AppendLine("    Path: " + product.Path);
             builder.AppendLine("    Product state: " + product.ProductState);
         }
+    }
+
+    public static string BuildSecuritySoftware(DiagnosticSession session)
+    {
+        var builder = new StringBuilder();
+        AppendSecuritySoftware(builder, session);
+        return builder.ToString().TrimEnd();
+    }
+
+    private static void AppendSecuritySoftware(StringBuilder builder, DiagnosticSession session)
+    {
+        Section(builder, "Security software (" + session.SecuritySoftware.Count + ")");
+        builder.AppendLine("  Installed programs and services matched against expected antivirus, EDR, XDR, and related security product names.");
+        builder.AppendLine("  Products already listed under Antivirus are not repeated. A product outside this list is not shown.");
+        if (!string.IsNullOrWhiteSpace(session.SecuritySoftwareNote))
+        {
+            builder.AppendLine("  " + session.SecuritySoftwareNote);
+        }
+
+        if (session.SecuritySoftware.Count == 0)
+        {
+            builder.AppendLine("  None");
+            return;
+        }
+
+        foreach (var finding in session.SecuritySoftware)
+        {
+            builder.AppendLine("  " + finding.Name);
+            builder.AppendLine("    Category: " + finding.Category);
+            if (finding.Programs.Count == 0 && finding.Services.Count == 0)
+            {
+                builder.AppendLine("    Evidence: not available");
+            }
+
+            foreach (var program in finding.Programs)
+            {
+                builder.AppendLine("    Installed: " + FormatProgram(program));
+                if (!string.IsNullOrWhiteSpace(program.InstallLocation))
+                {
+                    builder.AppendLine("    Location: " + program.InstallLocation);
+                }
+            }
+
+            foreach (var service in finding.Services)
+            {
+                builder.AppendLine("    Service: " + service.ServiceName + "  " + Display(service.DisplayName) + "  " + Display(service.Status));
+            }
+        }
+    }
+
+    private static string SummaryEvidence(SecuritySoftwareFinding finding)
+    {
+        foreach (var service in finding.Services)
+        {
+            if (string.Equals(service.Status, "Running", StringComparison.OrdinalIgnoreCase))
+            {
+                return service.ServiceName + " " + service.Status;
+            }
+        }
+
+        if (finding.Services.Count > 0)
+        {
+            var service = finding.Services[0];
+            return service.ServiceName + " " + Display(service.Status);
+        }
+
+        if (finding.Programs.Count > 0)
+        {
+            return finding.Programs[0].DisplayName;
+        }
+
+        return "found";
+    }
+
+    private static string FormatProgram(InstalledSecurityProgram program)
+    {
+        var text = program.DisplayName;
+        if (!string.IsNullOrWhiteSpace(program.Version))
+        {
+            text += "  " + program.Version;
+        }
+
+        if (!string.IsNullOrWhiteSpace(program.Publisher))
+        {
+            text += "  " + program.Publisher;
+        }
+
+        return text;
     }
 
     private static void AppendDefenderActions(StringBuilder builder, DiagnosticSession session)

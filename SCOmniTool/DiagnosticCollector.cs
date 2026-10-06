@@ -38,15 +38,19 @@ internal static class DiagnosticCollector
         Console.WriteLine("Reading configuration files...");
         session.SetConfiguration(ConfigurationDiscovery.FindAll(session.Notes));
 
-        Console.WriteLine("Checking relay addresses...");
-        session.SetNetworkResults(RelayProbe.Check(session.Services));
+        Console.WriteLine("Checking network...");
+        NetworkChecks.Run(session);
 
         Console.WriteLine("Reading event logs...");
         session.Events.AddRange(EventLogScanner.Scan(session));
 
-        Console.WriteLine("Reading antivirus...");
+        Console.WriteLine("Reading security software...");
         session.AntivirusProducts.AddRange(AntivirusScanner.FindAll(out var antivirusNote));
         session.AntivirusNote = antivirusNote;
+        session.SecuritySoftware.AddRange(SecuritySoftwareScanner.FindAll(
+            session.AntivirusProducts,
+            out var securitySoftwareNote));
+        session.SecuritySoftwareNote = securitySoftwareNote;
 
         if (session.IsAdministrator)
         {
