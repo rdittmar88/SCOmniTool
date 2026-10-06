@@ -125,7 +125,7 @@ internal static class DiagnosticExporter
             Console.WriteLine("Reading system summary...");
             File.WriteAllText(
                 Path.Combine(tempRoot, "system-report.txt"),
-                (string.IsNullOrWhiteSpace(session.SystemSummary) ? SystemReport.Build() : session.SystemSummary) + Environment.NewLine,
+                (SystemReportTextForZip(session)) + Environment.NewLine,
                 Encoding.UTF8);
 
             Console.WriteLine("Writing zip...");
@@ -315,6 +315,19 @@ internal static class DiagnosticExporter
         {
             TryDeleteFile(partial);
         }
+    }
+
+    private static string SystemReportTextForZip(DiagnosticSession session)
+    {
+        if (!string.IsNullOrWhiteSpace(session.SystemReportText))
+        {
+            return session.SystemReportText;
+        }
+
+        var summary = string.IsNullOrWhiteSpace(session.SystemSummary)
+            ? SystemReport.Build()
+            : session.SystemSummary;
+        return summary + Environment.NewLine + Environment.NewLine + SystemReport.BuildSnapshot();
     }
 
     private static string BuildSecuritySoftwareReport(DiagnosticSession session)

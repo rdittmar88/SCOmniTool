@@ -60,6 +60,11 @@ internal static class DiagnosticCollector
 
         Console.WriteLine("Reading system summary...");
         session.SystemSummary = SystemReport.Build();
+        Console.WriteLine("Reading a performance snapshot...");
+        session.SystemReportText = session.SystemSummary
+            + Environment.NewLine
+            + Environment.NewLine
+            + SystemReport.BuildSnapshot();
     }
 
     private static void AddServicesFromRegistry(DiagnosticSession session)
