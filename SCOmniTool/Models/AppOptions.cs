@@ -12,6 +12,17 @@ internal sealed class AppOptions
     public bool AllEvents { get; private set; }
     public int EventWindowDays { get; private set; } = Constants.DefaultEventWindowDays;
 
+    public void UseEventWindowDays(int days)
+    {
+        if (days <= 0)
+        {
+            throw new ArgumentException("Enter a positive number of days.");
+        }
+
+        EventWindowDays = days;
+        AllEvents = false;
+    }
+
     public static AppOptions Parse(string[] args)
     {
         var options = new AppOptions();

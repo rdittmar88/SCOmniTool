@@ -831,6 +831,14 @@ internal static class ReportWriter
         Console.WriteLine(builder.ToString().TrimEnd());
     }
 
+    public static void PrintEvents(DiagnosticSession session)
+    {
+        var builder = new StringBuilder();
+        AppendEvents(builder, session);
+        Console.WriteLine();
+        Console.WriteLine(builder.ToString().TrimEnd());
+    }
+
     public static string BuildDefenderActions(DiagnosticSession session)
     {
         var builder = new StringBuilder();

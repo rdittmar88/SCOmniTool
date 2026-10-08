@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using SCOmniTool.Discovery;
+using SCOmniTool.Events;
 using SCOmniTool.Export;
 using SCOmniTool.Models;
 using SCOmniTool.Network;
@@ -23,8 +24,9 @@ internal static class InteractiveMenu
             Console.WriteLine("3) Rerun network checks");
             Console.WriteLine("4) Rerun configuration report");
             Console.WriteLine("5) Dump data and rerun all reports");
-            Console.WriteLine("6) Check Defender actions");
-            Console.WriteLine("7) Exit");
+            Console.WriteLine("6) Scan additional event log days, up to 30 (may take additional time)");
+            Console.WriteLine("7) Check Defender actions");
+            Console.WriteLine("8) Exit");
             Console.Write("Select an option: ");
 
             var choice = Console.ReadLine()?.Trim();
@@ -58,12 +60,15 @@ internal static class InteractiveMenu
                         ReportWriter.PrintReport(session);
                         break;
                     case "6":
-                        DefenderActionCheck.Run(session);
+                        ScanAdditionalEvents(session);
                         break;
                     case "7":
+                        DefenderActionCheck.Run(session);
+                        break;
+                    case "8":
                         return;
                     default:
-                        Console.WriteLine("Enter a number from 1 to 7.");
+                        Console.WriteLine("Enter a number from 1 to 8.");
                         break;
                 }
             }
@@ -132,5 +137,32 @@ internal static class InteractiveMenu
             Console.WriteLine("Change Working Directory: " + session.WorkingDirectory);
             return;
         }
+    }
+
+    private static void ScanAdditionalEvents(DiagnosticSession session)
+    {
+        Console.WriteLine();
+        Console.WriteLine("Scan additional event log days");
+        Console.WriteLine("A longer search reads the full message for every matching event and can take additional time.");
+        Console.WriteLine("Enter 1 to " + Constants.MaxMenuEventWindowDays + " days. The new window replaces the stored events, and a later export writes those rows to the zip.");
+        Console.Write("Days to search, or press Enter to keep " + session.EventWindowDescription + ": ");
+        var input = Console.ReadLine()?.Trim() ?? string.Empty;
+        if (input.Length == 0)
+        {
+            return;
+        }
+
+        if (!int.TryParse(input, out var days) || days <= 0 || days > Constants.MaxMenuEventWindowDays)
+        {
+            Console.WriteLine("Enter a number from 1 to " + Constants.MaxMenuEventWindowDays + ".");
+            return;
+        }
+
+        session.Options.UseEventWindowDays(days);
+        session.Events.Clear();
+        session.EventLogsSearched.Clear();
+        Console.WriteLine("Reading event logs for the last " + days + " days...");
+        session.Events.AddRange(EventLogScanner.Scan(session));
+        ReportWriter.PrintEvents(session);
     }
 }
